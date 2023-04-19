@@ -1,0 +1,1 @@
+/usr/bin/c++ -rdynamic CMakeFiles/my_test.dir/tests/tests.cpp.o -o my_test  /usr/lib/libCatch2.a -lmyproject 
