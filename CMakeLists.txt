@@ -3,8 +3,12 @@ cmake_minimum_required(VERSION 3.0)
 project(myproject)
 
 # Set up your source files and add an executable target
-set(SOURCES main.cpp)
-add_executable(main ${SOURCES})
+
+set(CMAKE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+# Add the source directory to the include path
+include_directories(${CMAKE_SOURCE_DIR})
+
+add_executable(main ${CMAKE_SOURCE_DIR}/src/main.cpp)
 
 add_custom_target(clean-all
     COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/main

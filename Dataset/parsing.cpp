@@ -1,9 +1,11 @@
 #pragma once
 #include "json.hpp"
 #include <fstream>
+
 using namespace std;
 using json = nlohmann::json;
 // https://medium.com/ml2b/a-guide-to-json-using-c-a48039124f3a
+
 int dataset_parse()
 {
     std::ifstream f("../data/sample_data_unserialized.json");
@@ -12,8 +14,78 @@ int dataset_parse()
     auto& array_of_json = data; // extracts array of json strings
     // Print the values
     for (auto json_line : array_of_json) {
-        std::cout << json_line.value("id", "not found") << " " << json_line.value("title", "not found") << " " << json_line.value("abstract", "not found") << "\n"; 
+        std::cout << "Paper id is: " << json_line.value("id", "not found")  << " with authors:      ";
+        for (auto& elem : json_line["authors"]) {
+            std::cout << elem.value("id", "not_found") << " | ";
+        } 
+        std::cout << "\n";
         // extracts the id from a json line to a string
     }
+    return 1;
+}
+
+//2DV to take advantage of cache locality
+int parse_authors(std::vector<std::vector<std::string>>& parsed_data, std::string input_file) {
+    std::ifstream f(input_file);
+    json data = json::parse(f);
+    // Access the values existing in JSON data
+    auto& array_of_json = data; // extracts array of json strings
+    // Print the values
+
+    for (auto json_line : array_of_json) {
+        std::vector<std::string> new_line_of_data;
+
+        if (json_line.value("id", "not found") == "not_found") {
+            std::cout << "failed to find paper id, omitting line \n";
+            continue;
+        }
+        new_line_of_data.push_back(json_line.value("id", "not found"));
+
+        for (auto& elem : json_line["authors"]) {
+            if (elem.value("id", "not_found") == "not_found") {
+                std::cout << "failed to find author ids, omitting line \n";
+                new_line_of_data = std::vector<std::string>();
+                break;
+            }
+            new_line_of_data.push_back(elem.value("id", "not_found"));
+        } 
+        parsed_data.push_back(new_line_of_data);
+        // extracts the id from a json line to a string
+    }
+    return 1;
+}
+
+//2DV to take advantage of cache locality
+int parse_references(std::vector<std::vector<std::string>>& parsed_data, std::string input_file) {
+    std::ifstream f(input_file);
+    json data = json::parse(f);
+    // Access the values existing in JSON data
+    auto& array_of_json = data; // extracts array of json strings
+    // Print the values
+
+    //All papers with no references are cleaned out 
+
+    for (auto json_line : array_of_json) {
+        std::vector<std::string> new_line_of_data;
+
+        if (json_line.value("id", "not found") == "not_found") {
+            std::cout << "failed to find paper id, omitting line \n";
+            continue;
+        }
+        new_line_of_data.push_back(json_line.value("id", "not found"));
+
+        for (auto& elem : json_line["references"]) {
+            new_line_of_data.push_back(elem);
+        } 
+        if (new_line_of_data.size() > 1) {
+            parsed_data.push_back(new_line_of_data);
+        } else {
+            std::cout << "No references found for this paper, ommiting line.\n";
+        }
+        // extracts the id from a json line to a string
+    }
+
+    //clean data
+
     return 1;
 }

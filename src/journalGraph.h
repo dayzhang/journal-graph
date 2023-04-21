@@ -1,27 +1,24 @@
+#pragma once
 #include <iostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <unordered_set>
+
 class journalGraph {
 
-    struct weighted_edge {
-        float weight;
-        //temporary: currently, ID's are represeted as strings;
-        std::string destination;
-        weighted_edge(float _weight, std::string _destination) : weight(_weight), destination(_destination) {}
-    };
-
-    std::unordered_map<std::string, std::vector<weighted_edge>> graph;//vector-based adjacency list to take advantage of cache
+    std::unordered_map<std::string, std::vector<std::string>> graph;//vector-based adjacency list to take advantage of cache
     //A lot of performance issues with this as of now. Should consider switching to map-based implementations
     //For storage, will be important to consider a re-id to store as integers
 
 public:
 
-    journalGraph();
-    journalGraph(journalGraph& other_graph);
-    ~journalGraph();
+    journalGraph() = default; // subsetting author
+    journalGraph(const std::vector<std::vector<std::string>>& node_data);
+    ~journalGraph() = default;
     bool addEdge(std::string id1, std::string id2); //return false if fails to add
-    bool adjustWeight(const std::string& id1, const std::string& id2); // adjust the weighted edge from id1 to id2. Returns false if fails to adjust
 
-    std::vector<std::string> dijkstrasShortestPath(const std::string& start, const std::string& dest);
+    std::vector<std::string> getIdeaHistory(const std::string& source);
+    void dfs(const std::string& vertex, std::unordered_set<std::string>& seen, std::vector<std::string>& record);
+
 };
