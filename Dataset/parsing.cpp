@@ -1,7 +1,7 @@
 #pragma once
 #include "json.hpp"
 #include <fstream>
-
+#include <iostream>
 using namespace std;
 using json = nlohmann::json;
 // https://medium.com/ml2b/a-guide-to-json-using-c-a48039124f3a
