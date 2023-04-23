@@ -4,6 +4,11 @@ bool journalGraph::addEdge(std::string id1, std::string id2) {
     if (id1.empty() || id2.empty()) {
         return false;
     }
+    if (name_to_id_.find(id1) == name_to_id_.end()) {
+        name_to_id_[id1] = nodes_;
+        id_to_name_[nodes_] = id1;
+        nodes_++;
+    }
     if (name_to_id_.find(id2) == name_to_id_.end()) {
         name_to_id_[id2] = nodes_;
         id_to_name_[nodes_] = id2;
