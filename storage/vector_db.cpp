@@ -48,8 +48,8 @@ class VectorDatabase {
 
         ~VectorDatabase() {
             for (unsigned int i = 0; i < cache.size(); ++i) {
-                if (std::get<1>(cache.at(i))) {
-                    write_page(std::get<0>(cache.at(i)));
+                if (cache.at(i).dirty) {
+                    write_page(cache.at(i).page_num);
                 }
             }
             char temp[4];
@@ -76,7 +76,7 @@ class VectorDatabase {
                 if (curr_data.id == key) {
                     int page_num = i / ENTRIES_PER_PAGE;
                     convert_row_to_bin(&entry, curr_ptr);
-                    std::get<1>(cache.at(page_num % CACHE_SIZE)) = true;
+                    cache.at(page_num % CACHE_SIZE).dirty = true;
                     return;
                 }
             }
@@ -94,7 +94,7 @@ class VectorDatabase {
             int page_num = i / ENTRIES_PER_PAGE;
             char* curr_ptr = row_slot(i);
             convert_row_to_bin(&entry, curr_ptr);
-            std::get<1>(cache.at(page_num % CACHE_SIZE)) = true;
+            cache.at(page_num % CACHE_SIZE).dirty = true;
             ++num_entries;
             
         }
@@ -119,8 +119,18 @@ class VectorDatabase {
 
         typedef std::array<char, PAGE_SIZE> Page;
 
+        struct CacheBlock {
+            unsigned int page_num;
+            bool dirty;
+            Page page;
+            bool valid;
+            CacheBlock(): page_num(0), dirty(false), valid(false) {
+                page.fill(0);
+            }
+        };
+
         unsigned int num_entries;
-        std::array<std::tuple<unsigned int, bool, Page, bool>, CACHE_SIZE> cache;
+        std::array<CacheBlock, CACHE_SIZE> cache;
         unsigned int file_length;
         std::fstream file_handler;
 
@@ -145,14 +155,14 @@ class VectorDatabase {
             auto& cache_get = cache[get_page_idx((page_num))];
 
             // cache miss (block doesn't have right num or block is empty)
-            if (std::get<0>(cache_get) != page_num || !std::get<3>(cache_get)) {
-                Page& page = std::get<Page>(cache_get);
+            if (cache_get.page_num != page_num || !cache_get.valid) {
+                Page& page = cache_get.page;
                 // block no longer empty
-                std::get<3>(cache_get) = true;
+                cache_get.valid = true;
 
                 // if block is occupied by something else and it is dirty, writeback
-                if (std::get<0>(cache_get)) {
-                    write_page(std::get<unsigned int>(cache_get));
+                if (cache_get.dirty) {
+                    write_page(cache_get.page_num);
                 }
 
                 char buffer[PAGE_SIZE];
@@ -161,12 +171,12 @@ class VectorDatabase {
                 file_handler.read(buffer, PAGE_SIZE);
                 memcpy(page.data(), buffer, PAGE_SIZE);
 
-                std::get<0>(cache_get) = page_num;
-                std::get<2>(cache_get) = page;
-                std::get<1>(cache_get) = false;
+                cache_get.page_num = page_num;
+                cache_get.page = page;
+                cache_get.dirty = false;
             }
 
-            return std::get<2>(cache_get).data();
+            return cache_get.page.data();
         }
 
         char* row_slot(unsigned int row_num) {
