@@ -9,12 +9,14 @@
 #include <array>
 #include <iostream>
 #include <cassert>
+#include <stack>
+#include <climits>
 
 #define CACHE_SIZE 10
 #define ORDER 337
 #define PAGE_SIZE 4096
 #define KEYENTRY_SIZE 12
-#define HEADER_SIZE 12
+#define HEADER_SIZE 16
 #define ENTRY_SIZE 40
 
 unsigned int ENTRIES_PER_PAGE = PAGE_SIZE / ENTRY_SIZE - 1;
@@ -68,7 +70,7 @@ class BTreeDB {
                 num_entries = num_value_pages = num_key_pages = 0;
                 key_root = 0;
             } else {
-                int curr = 0;
+                unsigned int curr = 0;
 
                 fs_metadata >> curr;
                 num_entries = curr;
@@ -80,15 +82,81 @@ class BTreeDB {
                 key_root = curr;
             }
 
+            fs_metadata.close();
+            fs_metadata.open(key_filename + values_filename, std::ios::out | std::ios::trunc);
+
             meta_handler = std::move(fs_metadata);
         }
 
         ~BTreeDB() {
-            
+            for (unsigned int i = 0; i < CACHE_SIZE; ++i) {
+                if (key_cache.at(i).dirty) {
+                    write_page(key_cache.at(i).page_num, Key);
+                }
+                if (value_cache.at(i).dirty) {
+                    write_page(value_cache.at(i).page_num, Value);
+                }
+            }
+
+            key_handler.close();
+            value_handler.close();
+
+            meta_handler << num_entries << std::endl;
+            meta_handler << num_value_pages << std::endl;
+            meta_handler << num_key_pages << std::endl;
+            meta_handler << key_root << std::endl;
+
+            meta_handler.close();
         }
 
         void insert(long key, const std::string& value) {
+            ValueEntry to_add;
+            if (value.size() >= 40) {
+                strcpy(to_add.name, value.substr(0, 39).c_str());
+            } else {
+                strcpy(to_add.name, value.c_str());
+            }
+
             if (num_key_pages == 0) {
+                unsigned int block_num = create_new_keypage();
+                KeyPageInterface key_iter(block_num, this);
+                ValuePageInterface value_iter(this);
+
+                key_iter.set_root(true);
+                key_iter.set_internal(false);
+                key_iter.set_num_cells(0);
+                key_iter.push(key, value_iter.push(to_add));
+
+                return;
+            }
+
+            unsigned int curr_page = key_root;
+            KeyPageInterface key_iter(curr_page, this);
+
+            std::stack<unsigned int> traversal;
+
+            while (key_iter.is_internal()) {
+                traversal.push(key_iter.get_page_num());
+                unsigned int target = find_pos(key_iter, key);
+                unsigned int next_page = key_iter.get_child_pointer(target);
+                if (key_iter.get_key(target) > target) {
+                    next_page = key_iter.get_child_pointer(target + 1);
+                } 
+                key_iter.change_page(next_page);
+            }
+
+            unsigned int target = find_pos(key_iter, key);
+            ValuePageInterface value_iter(this);
+
+            if (key_iter.get_key(target) == key) {
+                value_iter.set_value(to_add, key_iter.get_child_pointer(target + 1));
+
+                return;
+            }
+
+            key_iter.insert(key, value_iter.push(to_add), target);
+
+            if (key_iter.get_num_cells() == ORDER) {
 
             }
 
@@ -111,7 +179,7 @@ class BTreeDB {
             bool valid;
             Page page;
             CacheBlock(): page_num(0), dirty(false), valid(false) {
-                page.fill(0);
+                page.fill(CHAR_MAX);
             }
         };
 
@@ -120,6 +188,7 @@ class BTreeDB {
             char node_type;
             char is_root;
             unsigned int parent_ptr;
+            unsigned int next_ptr;
         };
 
         unsigned int num_value_pages;
@@ -211,7 +280,7 @@ class BTreeDB {
                     curr += loc * ENTRY_SIZE;
 
                     char swap[KEYENTRY_SIZE];
-                    memcpy(swap, curr, 12);
+                    memcpy(swap, curr, KEYENTRY_SIZE);
                     for (unsigned int i = loc; i < num_cells; ++i) {
                         char temp[KEYENTRY_SIZE];
                         memcpy(temp, curr + KEYENTRY_SIZE * (i + 1), KEYENTRY_SIZE);
@@ -272,6 +341,26 @@ class BTreeDB {
                     handle_set();
                 }
 
+                unsigned int get_next_pointer() {
+                    unsigned int res;
+                    memcpy(&res, data + 12, 4);
+                    return res;
+                }
+
+                void set_next_pointer(unsigned int ptr) {
+                    memcpy(data + 12, &ptr, 4);
+                    handle_set();
+                }
+
+                void change_page(unsigned int page_num) {
+                    page_num_ = page_num;
+                    data = tree_->get_page(page_num, Key);
+                }
+
+                unsigned int get_page_num() {
+                    return page_num_;
+                }
+
             private:
                 void handle_set() {
                     data = tree_->get_page(page_num_, Key);
@@ -283,8 +372,124 @@ class BTreeDB {
                 char* data;
         };
 
-        unsigned int find_pos(unsigned int page_num, long key) {
-            KeyPageInterface iter(page_num, this);
+        class ValuePageInterface {
+            public:
+                ValuePageInterface(BTreeDB* tree): tree_(tree) {}
+
+                ValueEntry get_value(unsigned int entry_num) {
+                    unsigned int page_num = entry_num / ENTRIES_PER_PAGE;
+                    if (page_num >= tree_->num_value_pages) {
+                        throw std::runtime_error("entry num out of bounds");
+                    }
+                    unsigned int target = entry_num % ENTRIES_PER_PAGE;
+                    char* data = tree_->get_page(page_num, Value);
+                    data += 4; // get past size header
+
+                    data += target * ENTRY_SIZE;
+
+                    ValueEntry res;
+                    tree_->deserialize_value(data, &res);
+
+                    return res;
+                }
+
+                void set_value(ValueEntry& entry, unsigned int entry_num) {
+                    unsigned int page_num = entry_num / ENTRIES_PER_PAGE;
+                    if (page_num >= tree_->num_value_pages) {
+                        throw std::runtime_error("entry num out of bounds");
+                    }
+                    unsigned int target = entry_num % ENTRIES_PER_PAGE;
+                    char* data = tree_->get_page(page_num, Value);
+                    data += 4; // get past size header
+
+                    data += target * ENTRY_SIZE;
+
+                    tree_->serialize_value(&entry, data);
+                    tree_->set_dirty(page_num, Value);
+                }
+
+                
+                unsigned int push(ValueEntry& entry) {
+                    tree_->num_entries += 1;
+                    unsigned int page_num = tree_->num_entries / ENTRIES_PER_PAGE;
+                    if (page_num == tree_->num_value_pages) {
+                        std::array<char, PAGE_SIZE> new_value_page;
+                        new_value_page.fill(0);
+                        unsigned int temp = 1;
+                        memcpy(new_value_page.data(), &temp, 4);
+                        memcpy(new_value_page.data() + 4, &(entry.name), ENTRY_SIZE);
+                        tree_->write_page(page_num, Value);
+                    } else {
+                        char* data = tree_->get_page(page_num, Value);
+                        unsigned int size;
+                        memcpy(&size, data, 4);
+                        tree_->serialize_value(&entry, data + 4 * ENTRY_SIZE);
+                        memcpy(data + 4 + size * ENTRY_SIZE, &(entry.name), ENTRY_SIZE);
+                        set_value_size(page_num, size + 1);
+                    }
+
+                    return tree_->num_entries;
+                }
+
+                unsigned int get_value_size(unsigned int page_num) {
+                    if (page_num >= tree_->num_value_pages) {
+                        throw std::runtime_error("entry num out of bounds");
+                    }
+                    char* data = tree_->get_page(page_num, Value);
+                    unsigned int res;
+                    memcpy(&res, data, 4);
+                    return res;
+                }
+
+                void set_value_size(unsigned int page_num, unsigned int size) {
+                    if (page_num >= tree_->num_value_pages) {
+                        throw std::runtime_error("entry num out of bounds");
+                    }
+                    char* data = tree_->get_page(page_num, Value);
+                    memcpy(data, &size, 4);
+                    tree_->set_dirty(page_num, Value);
+                }
+                
+            private:
+                BTreeDB* tree_;
+        };
+
+        unsigned int split_page(KeyPageInterface iter) {
+            if (iter.is_root()) {
+                KeyPageInterface new_root(create_new_keypage(), this);
+                KeyPageInterface right(create_new_keypage(), this);
+                
+                new_root.set_root(true);
+                new_root.set_num_cells(1);
+                new_root.set_internal(true);
+                new_root.push(iter.get_key(ORDER / 2), right.get_page_num());
+                new_root.set_child_pointer(iter.get_page_num(), 0);
+
+                iter.set_root(false);
+                iter.set_internal(false);
+                iter.set_parent_ptr(new_root.get_page_num());
+                iter.set_num_cells(PAGE_SIZE / 2 + 1);
+
+                right.set_root(false);
+                right.set_internal(false);
+                right.set_parent_ptr(new_root.get_page_num());
+                right.set_num_cells(PAGE_SIZE / 2);
+                
+            }
+        }
+
+        unsigned int create_new_keypage() {
+            std::array<char, PAGE_SIZE> new_page;
+            new_page.fill(CHAR_MAX);
+
+            key_handler.seekg(0, std::ios::end);
+            key_handler.write(new_page.data(), PAGE_SIZE);
+            ++num_key_pages;
+
+            return num_key_pages - 1;
+        }
+
+        unsigned int find_pos(KeyPageInterface& iter, long key) {
             unsigned int size = iter.get_num_cells();
             if (size == 0) {
                 return 0;
@@ -306,75 +511,6 @@ class BTreeDB {
                 }
             }
             return left;
-        }
-
-        char* get_value(unsigned int entry_num) {
-            unsigned int page_num = entry_num / ENTRIES_PER_PAGE;
-            if (page_num >= num_value_pages) {
-                throw std::runtime_error("entry num out of bounds");
-            }
-            unsigned int target = entry_num % ENTRIES_PER_PAGE;
-            char* data = get_page(page_num, Value);
-            data += 4; // get past size header
-
-            data += target * ENTRY_SIZE;
-
-            return data;
-        }
-
-        void set_value(const ValueEntry& entry, unsigned int entry_num) {
-            unsigned int page_num = entry_num / ENTRIES_PER_PAGE;
-            if (page_num >= num_value_pages) {
-                throw std::runtime_error("entry num out of bounds");
-            }
-            unsigned int target = entry_num % ENTRIES_PER_PAGE;
-            char* data = get_page(page_num, Value);
-            data += 4; // get past size header
-
-            data += target * ENTRY_SIZE;
-
-            memcpy(data, entry.name, ENTRY_SIZE);
-            set_dirty(page_num, Value);
-        }
-
-        unsigned int push_value(const ValueEntry& entry) {
-            ++num_entries;
-            unsigned int page_num = num_entries / ENTRIES_PER_PAGE;
-            if (page_num == num_value_pages) {
-                std::array<char, PAGE_SIZE> new_value_page;
-                new_value_page.fill(0);
-                unsigned int temp = 1;
-                memcpy(new_value_page.data(), &temp, 4);
-                memcpy(new_value_page.data() + 4, &(entry.name), ENTRY_SIZE);
-                write_page(page_num, Value);
-            } else {
-                char* data = get_page(page_num, Value);
-                unsigned int size;
-                memcpy(&size, data, 4);
-                memcpy(data + 4 + size * ENTRY_SIZE, &(entry.name), ENTRY_SIZE);
-                ++size;
-                memcpy(data, &size, 4);
-            }
-
-            return num_entries;
-        }
-
-        unsigned int get_value_size(unsigned int page_num) {
-            if (page_num >= num_value_pages) {
-                throw std::runtime_error("entry num out of bounds");
-            }
-            char* data = get_page(page_num, Value);
-            int res;
-            memcpy(&res, data, 4);
-            return res;
-        }
-
-        void set_value_size(unsigned int page_num, unsigned int size) {
-            if (page_num >= num_value_pages) {
-                throw std::runtime_error("entry num out of bounds");
-            }
-            char* data = get_page(page_num, Value);
-            memcpy(data, &size, 4);
         }
 
         void set_dirty(unsigned int page_num, FileType type) {
