@@ -4,14 +4,18 @@ bool journalGraph::addEdge(std::string id1, std::string id2) {
     if (id1.empty() || id2.empty()) {
         return false;
     }
+    /*
     if (name_to_id_.find(id1) == name_to_id_.end()) {
         name_to_id_[id1] = nodes_;
         id_to_name_[nodes_] = id1;
+        graph_[nodes]
         nodes_++;
     }
+    */
     if (name_to_id_.find(id2) == name_to_id_.end()) {
         name_to_id_[id2] = nodes_;
         id_to_name_[nodes_] = id2;
+        graph_[nodes_] = std::vector<size_t>();
         nodes_++;
     }
     graph_[name_to_id_[id1]].push_back(name_to_id_[id2]);
@@ -29,6 +33,7 @@ journalGraph::journalGraph(const std::vector<std::vector<std::string>>& node_dat
         if (source.empty()) continue;
         name_to_id_[source] = i;
         id_to_name_[i] = source;
+        i++;
     }
 
     for (const auto& entry : node_data) {
@@ -40,6 +45,7 @@ journalGraph::journalGraph(const std::vector<std::vector<std::string>>& node_dat
             }
         }
     }
+    
 }
 
 /*
@@ -57,6 +63,8 @@ void journalGraph::dfs(const std::string& vertex, std::unordered_set<std::string
 */
 // not entirely sure what the dfs is supposed to be for, but changed it to iterative so it doesn't exceed recursion limit
 void journalGraph::dfs(const size_t& start_node, std::vector<size_t>& record) {
+    // std::cout << __LINE__ << std::endl;
+
     std::vector<bool> seen(nodes_, false);
     std::stack<size_t> node_stack;
     node_stack.push(start_node);
@@ -77,6 +85,15 @@ void journalGraph::dfs(const size_t& start_node, std::vector<size_t>& record) {
         }
     }
 }
+void journalGraph::print() {
+    for (size_t start = 0; start < nodes_; start++) {
+        std::cout << "Start Node: " << start << std::endl;
+        for (size_t other : graph_.at(start)) {
+            std::cout << other << " ";
+        }
+        std::cout << std::endl;
+    }
+}
 
 std::vector<std::string> journalGraph::getIdeaHistory(const std::string& source) {
     if (graph_.find(name_to_id_.at(source)) == graph_.end()) {
@@ -85,7 +102,11 @@ std::vector<std::string> journalGraph::getIdeaHistory(const std::string& source)
     }
 
     std::vector<size_t> record;
+    // std::cout << __LINE__ << std::endl;
+
     dfs(name_to_id_.at(source), record);
+    // std::cout << __LINE__ << std::endl;
+
     std::vector<std::string> out;
     for (size_t id : record) out.push_back(id_to_name_.at(id));
     return out;

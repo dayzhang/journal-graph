@@ -22,7 +22,7 @@ public:
     journalGraph(const std::vector<std::vector<std::string>>& node_data);
     ~journalGraph() = default;
     bool addEdge(std::string id1, std::string id2); //return false if fails to add
-
+    void print();
     std::vector<std::string> getIdeaHistory(const std::string& source);
     // void dfs(const std::string& vertex, std::unordered_set<std::string>& seen, std::vector<std::string>& record);
     void dfs(const size_t& start_node, std::vector<size_t>& record);

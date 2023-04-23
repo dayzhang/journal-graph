@@ -12,11 +12,12 @@ int main() {
     if (!success) {
         return exit_failure;
     }
+    std::cout << __LINE__ << std::endl;
 
     journalGraph g(parsed_info);
-
+    g.print();
     std::vector<std::string> answer = g.getIdeaHistory("53e99804b7602d97020196b8");
-
+    
     for (std::string& id : answer) {
         std::cout << id << "\n";
     }
