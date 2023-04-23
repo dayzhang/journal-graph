@@ -73,13 +73,15 @@ void journalGraph::dfs(const size_t& start_node, std::vector<size_t>& record) {
     }
 }
 
-std::vector<size_t> journalGraph::getIdeaHistory(const size_t& source) {
-    if (graph_.find(source) == graph_.end()) {
+std::vector<std::string> journalGraph::getIdeaHistory(const std::string& source) {
+    if (graph_.find(name_to_id_.at(source)) == graph_.end()) {
         std::cout << "source: " << source << " not found in database.\n";
-        return std::vector<size_t>();
+        return std::vector<std::string>();
     }
 
     std::vector<size_t> record;
-    dfs(source, record);
-    return record;
+    dfs(name_to_id_.at(source), record);
+    std::vector<std::string> out;
+    for (size_t id : record) out.push_back(id_to_name_.at(id));
+    return out;
 }
