@@ -1,25 +1,20 @@
 #include <iostream>
 #include "../Dataset/parsing.cpp"
 #include "journalGraph.cpp"
+#include "../storage/vector_db.cpp"
 #define exit_failure 0
 #define exit_success 1
 
 int main() {
-    std::cout << "CS225 Project by Daniel Zhang, Ian Zhang, Kevin Chen, and Jenny Hu" << "\n";
-    std::vector<std::vector<std::string>> parsed_info;
-    int success = parse_references(parsed_info, "../data/dfs_test.json");
+    VectorDatabase db("test.db");
 
-    if (!success) {
-        return exit_failure;
-    }
+    db.insert(5, "abcd");
+    std::cout << "among us" << std::endl;
+    std::cout << db.select(5) << std::endl;
+    db.insert(100, "deez nuts fdsafdsafkdsalf;dsafjdkasfjkdslajfkdasjfkfdsafdasfdf");
+    std::cout << db.select(100) << std::endl;
+    std::cout << db.select(-1) << std::endl;
+    
 
-    journalGraph g(parsed_info);
-
-    std::vector<std::string> answer = g.getIdeaHistory("53e99804b7602d97020196b8");
-
-    for (std::string& id : answer) {
-        std::cout << id << "\n";
-    }
-
-    return exit_success;
+    return 1;
 }
