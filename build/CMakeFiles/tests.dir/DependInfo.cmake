@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/workspaces/journal-graph/tests/tests.cpp" "CMakeFiles/tests.dir/tests/tests.cpp.o" "gcc" "CMakeFiles/tests.dir/tests/tests.cpp.o.d"
+  "/workspaces/journal-graph/catch_tests/tests.cpp" "CMakeFiles/tests.dir/catch_tests/tests.cpp.o" "gcc" "CMakeFiles/tests.dir/catch_tests/tests.cpp.o.d"
   )
 
 # Targets to which this target links.

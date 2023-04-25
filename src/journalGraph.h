@@ -3,7 +3,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <unordered_set>
 
 class journalGraph {
 
@@ -19,6 +18,7 @@ public:
     bool addEdge(std::string id1, std::string id2); //return false if fails to add
 
     std::vector<std::string> getIdeaHistory(const std::string& source);
-    void dfs(const std::string& vertex, std::unordered_set<std::string>& seen, std::vector<std::string>& record);
+    void dfs(const std::string& vertex, const std::string& pred, std::unordered_map<std::string, int>& seen, std::vector<std::string>& record);
+    void dfs_iterative(const std::string& vertex, const std::string& pred, std::unordered_map<std::string, int>& seen, std::vector<std::string>& record);
 
 };

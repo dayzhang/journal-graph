@@ -2,7 +2,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-class authorGraph {
+class AuthorGraph {
 
     struct weighted_edge {
         float weight;
@@ -18,10 +18,10 @@ class authorGraph {
 
 public:
 
-    authorGraph(); // subsetting author graphs: Only consider most significant (first) author for each paper
-    authorGraph(const std::vector<std::vector<std::string>>& node_data);
-    authorGraph(authorGraph& other_graph);
-    ~authorGraph();
+    AuthorGraph(); // subsetting author graphs: Only consider most significant (first) author for each paper
+    AuthorGraph(const std::vector<std::vector<std::string>>& node_data);
+    AuthorGraph(AuthorGraph& other_graph);
+    ~AuthorGraph();
     bool addEdge(std::string id1, std::string id2); //return false if fails to add
     bool adjustWeight(const std::string& id1, const std::string& id2); // adjust the weighted edge from id1 to id2. Returns false if fails to adjust
 

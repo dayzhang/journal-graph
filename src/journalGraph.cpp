@@ -22,14 +22,26 @@ journalGraph::journalGraph(const std::vector<std::vector<std::string>>& node_dat
 }
 
 
-void journalGraph::dfs(const std::string& vertex, std::unordered_set<std::string>& seen, std::vector<std::string>& record) { // note that due to the prescence of directed graph + tree structure, cycle should not be possible
-    seen.insert(vertex);
+void journalGraph::dfs(const std::string& vertex, const std::string& pred, std::unordered_map<std::string, int>& seen, std::vector<std::string>& record) { // note that due to the prescence of directed graph + tree structure, cycle should not be possible
+    seen[vertex] = seen[pred] + 1;
 
-    record.push_back(vertex);
-    
+    record.push_back(vertex + " Cited by: " + pred);
+
     for (std::string& adjacent : graph[vertex]) {
         if (seen.find(adjacent) == seen.end()) {
-            dfs(adjacent, seen, record);
+            dfs(adjacent, vertex, seen, record);
+        }
+    }
+}
+
+void journalGraph::dfs_iterative(const std::string& vertex, const std::string& pred, std::unordered_map<std::string, int>& seen, std::vector<std::string>& record) { // note that due to the prescence of directed graph + tree structure, cycle should not be possible
+    seen[vertex] = seen[pred] + 1;
+
+    record.push_back(vertex + " Cited by: " + pred);
+
+    for (std::string& adjacent : graph[vertex]) {
+        if (seen.find(adjacent) == seen.end()) {
+            dfs(adjacent, vertex, seen, record);
         }
     }
 }
@@ -40,8 +52,10 @@ std::vector<std::string> journalGraph::getIdeaHistory(const std::string& source)
         std::cout << "source: " << source << " not found in database.\n";
     }
 
-    std::unordered_set<std::string> seen;
+    std::unordered_map<std::string, int> seen;
+    std::string root("root");
+    seen[root] = -1;
     std::vector<std::string> record;
-    dfs(source, seen, record);
+    dfs(source, root, seen, record);
     return record;
 }
