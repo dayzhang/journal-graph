@@ -6,12 +6,14 @@
 #include <climits>
 
 #define CACHE_SIZE 10
-#define ORDER 337
+#define ORDER 3
 #define PAGE_SIZE 4096
 
 #define KEYENTRY_SIZE 12
 #define HEADER_SIZE 16
-#define ENTRY_SIZE 40
+#define ENTRY_SIZE 44
+
+#define DEFAULT_VAL 0
 
 const unsigned int ENTRIES_PER_PAGE = PAGE_SIZE / ENTRY_SIZE - 1;
 
@@ -24,7 +26,8 @@ enum FileType {
     This struct details how values are stored in the values database.
 */
 struct ValueEntry {
-    char name[40];
+    std::array<char, 40> name;
+    int temp;
 };
 
 class BTreeDB {
@@ -44,7 +47,7 @@ class BTreeDB {
             bool valid;
             Page page;
             CacheBlock(): page_num(0), dirty(false), valid(false) {
-                page.fill(CHAR_MAX);
+                page.fill(DEFAULT_VAL);
             }
         };
 
@@ -60,8 +63,8 @@ class BTreeDB {
             unsigned int num_cells;
             char node_type;
             char is_root;
-            unsigned int parent_ptr;
-            unsigned int next_ptr;
+            // unsigned int parent_ptr;
+            // unsigned int next_ptr;
         };
 
         /**
@@ -104,6 +107,11 @@ class BTreeDB {
         */
         std::fstream meta_handler;
 
+        /**
+            Dummy array filled with 0's for copying.
+        */
+        char empty_array[PAGE_SIZE];
+
     public:
         /**
             Constructor for the BTree database. Either creates a new database if the filename doesn't refer to anything or instantitates a previously created database if the filenames do refer to something. The key and value databases should be compatible with each other.
@@ -124,7 +132,7 @@ class BTreeDB {
             @param key The key
             @param value The value the key is associated with
         */
-        void insert(long key, const std::string& value);
+        void insert(long key, ValueEntry& value) ;
         /**
             Retrieves a value from the database according to a key.
 
@@ -204,18 +212,18 @@ class BTreeDB {
                 */
                 void set_child_ptr(unsigned int target, unsigned int entry_num);
 
-                /**
-                    Returns the parent pointer of the current page. 
+                // /**
+                //     Returns the parent pointer of the current page. 
 
-                    @return parent pointer (bucket number) of parent; UINT_MAX if null
-                */
-                unsigned int get_parent_ptr() const;
-                /**
-                    Sets the parent pointer of the current page to a given value.
+                //     @return parent pointer (bucket number) of parent; UINT_MAX if null
+                // */
+                // unsigned int get_parent_ptr() const;
+                // /**
+                //     Sets the parent pointer of the current page to a given value.
 
-                    @param x The parent pointer (page number) to set
-                */
-                void set_parent_ptr(unsigned int x);
+                //     @param x The parent pointer (page number) to set
+                // */
+                // void set_parent_ptr(unsigned int x);
 
                 /**
                     Returns the nth key of the current page.
@@ -231,46 +239,53 @@ class BTreeDB {
                 */
                 unsigned int get_page_num() const;
 
-                /**
-                    Returns the next pointer of this page
+                // /**
+                //     Returns the next pointer of this page
 
-                    @return next pointer (page number), UINT_MAX if null
-                */
-                unsigned int get_next_ptr() const;
-                /**
-                    Set the next pointer of this page
+                //     @return next pointer (page number), UINT_MAX if null
+                // */
+                // unsigned int get_next_ptr() const;
+                // /**
+                //     Set the next pointer of this page
 
-                    @param ptr pointer (page number) to set this page's next pointer to
-                */
-                void set_next_ptr(unsigned int ptr);
+                //     @param ptr pointer (page number) to set this page's next pointer to
+                // */
+                // void set_next_ptr(unsigned int ptr);
 
                 /**
-                    Inserts a key entry (key + child_ptr) at the given location, moving everything else to the right accordingly.
-
-                    @param key Key of the entry to insert
-                    @param child_ptr child pointer that follows this key
-                    @param loc location to insert this entry into; 0 to size
-                */
-                void insert(long key, unsigned int child_ptr, unsigned int loc);
-                /**
-                    Pushes a new key/child_ptr key pair to the end of the page.
+                    Pushes a new key/child_ptr key pair in sorted order.
 
                     @param key Key to insert
                     @param child_ptr child pointer to insert following the key
                 */
                 void push(long key, unsigned int child_ptr);
                 /**
-                    Changes the page this interface refers to.
-
-                    @param page_num The page number to switch this interface to
-                */
-                void change_page(unsigned int page_num);
-                /**
                     Moves the latter half of the keys in this interface to another interface. Used for splitting nodes.
 
                     @param other A reference to the interface to copy keys to (should be empty)
                 */
                 void move_keys(KeyPageInterface& other);
+
+                /**
+                    Helper function to do binary search on a given keypage interface.
+
+                    @param iter A reference to the interface for the target key page
+                    @param key The key to do binary search on
+
+                    @return The key index that is the first key index that is greater than the passed in key
+                */
+                unsigned int find_pos(long key) const;
+
+                 /**
+                    Splits a key page according to the BTree logic. Should only be called on a full key page. 
+
+                    Splits the latter half of the keys to a new key page and pushes the middle key to the parent. If there is no parent, creates a new parent key page.
+
+                    @param iter An interface to the key page to split
+                */
+                void split_page();
+
+                void split_page(KeyPageInterface& parent);
 
             private:
                 /**
@@ -282,6 +297,15 @@ class BTreeDB {
                     Helper function to get the data for the given page. Called instead of stored to ensure that data remains in sync.
                 */
                 char* get_data() const;
+
+                /**
+                    Inserts a key entry (key + child_ptr) at the given location, moving everything else to the right accordingly.
+
+                    @param key Key of the entry to insert
+                    @param child_ptr child pointer that follows this key
+                    @param loc location to insert this entry into; 0 to size
+                */
+                void insert(long key, unsigned int child_ptr, unsigned int loc);
 
                 /**
                     The page number this interface refers to.
@@ -347,30 +371,13 @@ class BTreeDB {
         };
 
         /**
-            Splits a key page according to the BTree logic. Should only be called on a full key page. 
-
-            Splits the latter half of the keys to a new key page and pushes the middle key to the parent. If there is no parent, creates a new parent key page.
-
-            @param iter An interface to the key page to split
-        */
-        unsigned int split_page(KeyPageInterface& iter);
-
-        /**
             Creates a new keypage.
 
             @return A keypage interface for the newly created keypage
         */
-        KeyPageInterface create_new_keypage();
+        KeyPageInterface create_new_keypage(unsigned int num_cells, bool internal, bool is_root, unsigned int parent_ptr = UINT_MAX, unsigned int next_ptr = UINT_MAX);
 
-        /**
-            Helper function to do binary search on a given keypage interface.
-
-            @param iter A reference to the interface for the target key page
-            @param key The key to do binary search on
-
-            @return The key index that is the first key index that is greater than the passed in key
-        */
-        unsigned int find_pos(KeyPageInterface& iter, long key) const;
+        void write_all();
 
         /**
             Helper function to set the page_num page dirty for writeback.
