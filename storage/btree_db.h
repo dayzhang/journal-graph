@@ -1,12 +1,9 @@
 #pragma once
 
 #include <string>
-#include <vector>
 #include <fstream>
-#include <tuple>
 #include <array>
 #include <climits>
-#include <cstring>
 
 #define CACHE_SIZE 10
 #define ORDER 337
@@ -15,6 +12,8 @@
 #define KEYENTRY_SIZE 12
 #define HEADER_SIZE 16
 #define ENTRY_SIZE 40
+
+const unsigned int ENTRIES_PER_PAGE = PAGE_SIZE / ENTRY_SIZE - 1;
 
 enum FileType {
     Key,
@@ -50,6 +49,11 @@ class BTreeDB {
         };
 
         /**
+            A cache set is a pair of cache block with an lru bit.
+        */
+        typedef std::pair<std::array<CacheBlock, 2>, bool> CacheSet;
+
+        /**
             This struct is how the header of key pages are structured, although it is unused. num_cells is the number of key-pointer pairs are in the page, node_type is whether the page is internal (1) or a leaf (not 1), is_root is whether the page is the root (1) or not (not 1), parent_ptr is the page number of the parent pointer or CHAR_MAX if it doesn't have one, and next_ptr is the next node on the same level the page points to (if this page is a leaf).
         */
         struct Header {
@@ -79,13 +83,13 @@ class BTreeDB {
         unsigned int key_root;
 
         /**
-            Cache for the key pages.
+            Cache for the key pages. Has 10 cache sets and is 2-way associative.
         */
-        std::array<CacheBlock, CACHE_SIZE> key_cache;
+        std::array<CacheSet, CACHE_SIZE> key_cache;
         /**
-            Cache for the value pages.
+            Cache for the value pages. Has 10 cache sets and is 2-way associative.
         */
-        std::array<CacheBlock, CACHE_SIZE> value_cache;
+        std::array<CacheSet, CACHE_SIZE> value_cache;
 
         /**
             File handler for the key database (read and write access).
@@ -270,9 +274,14 @@ class BTreeDB {
 
             private:
                 /**
-                    Helper variable to mark the current page number as dirty for writeback later. Used in all non-const functions in this class.
+                    Helper function to mark the current page number as dirty for writeback later. Used in all non-const functions in this class.
                 */
                 void handle_set();
+
+                /**
+                    Helper function to get the data for the given page. Called instead of stored to ensure that data remains in sync.
+                */
+                char* get_data() const;
 
                 /**
                     The page number this interface refers to.
@@ -282,10 +291,6 @@ class BTreeDB {
                     A pointer to the tree this interface is serving. Used to access functions.
                 */
                 BTreeDB* tree_;
-                /**
-                    An array of char data representing the page data of the current page. 
-                */
-                char* data;
         };
 
         /**
@@ -397,7 +402,7 @@ class BTreeDB {
             @param type whether to read from the key or value caches
             @return a reference to the cacheblock the page num is associated with
         */
-        CacheBlock& get_cache_block(unsigned int page_num, FileType type);
+        std::pair<std::array<BTreeDB::CacheBlock, 2>, bool>& get_cache_set(unsigned int page_num, FileType type);
 
         /**
             Gets the actual data of a given page number. Handles cache misses and cache hits implicitly.

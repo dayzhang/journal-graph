@@ -6,8 +6,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <exception>
-
-unsigned int ENTRIES_PER_PAGE = PAGE_SIZE / ENTRY_SIZE - 1;
+#include <cstring>
 
 BTreeDB::BTreeDB(const std::string& key_filename, const std::string& values_filename) {
     std::fstream fs_keys(key_filename, std::ios::binary | std::ios::in | std::ios::out);
@@ -71,11 +70,16 @@ BTreeDB::BTreeDB(const std::string& key_filename, const std::string& values_file
 
 BTreeDB::~BTreeDB() {
     for (unsigned int i = 0; i < CACHE_SIZE; ++i) {
-        if (key_cache.at(i).dirty) {
-            write_page(key_cache.at(i).page_num, Key);
+        for (CacheBlock& block : key_cache.at(i).first) {
+            if (block.dirty) {
+                write_page(block.page_num, Key);
+            }
         }
-        if (value_cache.at(i).dirty) {
-            write_page(value_cache.at(i).page_num, Value);
+
+        for (CacheBlock& block : value_cache.at(i).first) {
+            if (block.dirty) {
+                write_page(block.page_num, Value);
+            }
         }
     }
 
@@ -142,53 +146,51 @@ void BTreeDB::insert(long key, const std::string& value) {
 
 }
 
-BTreeDB::KeyPageInterface::KeyPageInterface(unsigned int page_num, BTreeDB* tree): page_num_(page_num), tree_(tree) {
-    data = tree->get_page(page_num, Key);
-}
+BTreeDB::KeyPageInterface::KeyPageInterface(unsigned int page_num, BTreeDB* tree): page_num_(page_num), tree_(tree) {}
 
 unsigned int BTreeDB::KeyPageInterface::get_size() const {
     unsigned int res;
-    memcpy(&res, data, 4);
+    memcpy(&res, get_data(), 4);
     return res;
 }
 
 void BTreeDB::KeyPageInterface::set_size(unsigned int x) {
-    memcpy(data, &x, 4);
+    memcpy(get_data(), &x, 4);
     handle_set();
 }
 
 bool BTreeDB::KeyPageInterface::is_internal() const {
     char res;
-    memcpy(&res, data + 4, 1);
+    memcpy(&res, get_data() + 4, 1);
     return res == 1;
 }
 
 void BTreeDB::KeyPageInterface::set_internal(bool x) {
     char temp = x;
-    memcpy(data + 4, &temp, 1);
+    memcpy(get_data() + 4, &temp, 1);
     handle_set();
 }
 
 bool BTreeDB::KeyPageInterface::is_root() const {
     char res;
-    memcpy(&res, data + 5, 1);
+    memcpy(&res, get_data() + 5, 1);
     return res == 1;
 }
 
 void BTreeDB::KeyPageInterface::set_root(bool x) {
     char temp = x;
-    memcpy(data + 5, &temp, 1);
+    memcpy(get_data() + 5, &temp, 1);
     handle_set();
 }
 
 unsigned int BTreeDB::KeyPageInterface::get_parent_ptr() const {
     unsigned int res;
-    memcpy(&res, data + 8, 4);
+    memcpy(&res, get_data() + 8, 4);
     return res;
 }
 
 void BTreeDB::KeyPageInterface::set_parent_ptr(unsigned int x) {
-    memcpy(data + 8, &x, 4);
+    memcpy(get_data() + 8, &x, 4);
     handle_set();
 }
 
@@ -196,24 +198,22 @@ long BTreeDB::KeyPageInterface::get_key(unsigned int entry_num) const {
     if (entry_num >= get_size()) {
         throw std::runtime_error("entry num out of bounds");
     }
-    char* curr = data;
-
-    curr += HEADER_SIZE; // get past headers
-    curr += 4; // get past first child pointer
-
+    char* curr = get_data();
+    curr += HEADER_SIZE;
+    curr += 4;
     curr += entry_num * KEYENTRY_SIZE;
+
     long res;
     memcpy(&res, curr, 8);
     return res;
 }
-
 unsigned int BTreeDB::KeyPageInterface::get_page_num() const  {
     return page_num_;
 }
 
 void BTreeDB::KeyPageInterface::insert(long key, unsigned int child_ptr, unsigned int loc) {
     unsigned int num_cells = get_size();
-    char* curr = data;
+    char* curr = get_data();
     curr += HEADER_SIZE;
     curr += 4;
 
@@ -230,13 +230,12 @@ void BTreeDB::KeyPageInterface::insert(long key, unsigned int child_ptr, unsigne
 
     memcpy(curr, &key, 8);
     memcpy(curr + 8, &child_ptr, 4);
-
-    handle_set();
+    set_size(num_cells + 1);
 }
 
 void BTreeDB::KeyPageInterface::push(long key, unsigned int child_ptr) {
     unsigned int num_cells = get_size();
-    char* curr = data;
+    char* curr = get_data();
     curr += HEADER_SIZE;
     curr += 4;
 
@@ -251,7 +250,7 @@ unsigned int BTreeDB::KeyPageInterface::get_child_ptr(unsigned int entry_num) co
     if (entry_num > get_size()) {
         throw std::runtime_error("entry num out of bounds");
     }
-    char* curr = data;
+    char* curr = get_data();
     curr += HEADER_SIZE; // get past headers
 
     if (entry_num != 0) {
@@ -268,43 +267,60 @@ void BTreeDB::KeyPageInterface::set_child_ptr(unsigned int target, unsigned int 
     if (entry_num > get_size()) {
         throw std::runtime_error("entry num out of bounds");
     }
-    char* curr = data;
+    char* curr = get_data();
     curr += HEADER_SIZE; // get past headers
 
     if (entry_num != 0) {
         curr += 4;
-        data += (entry_num - 1) * KEYENTRY_SIZE;
+        curr += (entry_num - 1) * KEYENTRY_SIZE;
     }
 
     unsigned int res;
-    memcpy(data, &target, 4);
+    memcpy(curr, &target, 4);
     handle_set();
 }
 
 unsigned int BTreeDB::KeyPageInterface::get_next_ptr() const {
     unsigned int res;
-    memcpy(&res, data + 12, 4);
+    memcpy(&res, get_data() + 12, 4);
     return res;
 }
 
 void BTreeDB::KeyPageInterface::set_next_ptr(unsigned int ptr) {
-    memcpy(data + 12, &ptr, 4);
+    memcpy(get_data() + 12, &ptr, 4);
     handle_set();
 }
 
 void BTreeDB::KeyPageInterface::change_page(unsigned int page_num) {
     page_num_ = page_num;
-    data = tree_->get_page(page_num, Key);
 }
 
 void BTreeDB::KeyPageInterface::move_keys(KeyPageInterface& other) {
+    static const unsigned int offset = HEADER_SIZE + 4 + (ORDER / 2 + 1) * KEYENTRY_SIZE;
+
+    char* begin_copy = get_data();
+    char temp[PAGE_SIZE - offset];
+
+    memcpy(temp, begin_copy + offset, PAGE_SIZE - offset);
+    std::array<char, PAGE_SIZE - offset> to_fill;
+    to_fill.fill(CHAR_MAX);
+    memcpy(begin_copy + offset, to_fill.data(), PAGE_SIZE - offset);
+    handle_set();
+
+    char* to_copy = other.get_data();
+
+    memcpy(to_copy + HEADER_SIZE, temp, offset);
+
+
 
     other.handle_set();
-    handle_set();
+}
+
+char* BTreeDB::KeyPageInterface::get_data() const {
+    return tree_->get_page(page_num_, Key);
 }
 
 void BTreeDB::KeyPageInterface::handle_set()  {
-    data = tree_->get_page(page_num_, Key);
     tree_->set_dirty(page_num_, Key);
 }
 
@@ -452,12 +468,14 @@ unsigned int BTreeDB::find_pos(KeyPageInterface& iter, long key) const {
 }
 
 void BTreeDB::set_dirty(unsigned int page_num, FileType type) {
-    switch (type) {
-        case Key: 
-            key_cache[get_page_idx(page_num)].dirty = true;
-        case Value:
-            value_cache[get_page_idx(page_num)].dirty = true;
+    CacheSet& set = get_cache_set(page_num, type);
+    for (CacheBlock& block : set.first) {
+        if (block.page_num == page_num) {
+            block.dirty = true;
+            return;
+        }
     }
+    throw std::runtime_error("page_num not in cache");
 }
 
 unsigned int BTreeDB::get_page_idx(unsigned int page_num) const {
@@ -480,7 +498,7 @@ void BTreeDB::write_page(unsigned int page_num, FileType type) {
     }
 }
 
-BTreeDB::CacheBlock& BTreeDB::get_cache_block(unsigned int page_num, FileType type) {
+BTreeDB::CacheSet& BTreeDB::get_cache_set(unsigned int page_num, FileType type) {
     switch(type) {
         case Key: {
             if (page_num >= num_key_pages) {
@@ -498,28 +516,45 @@ BTreeDB::CacheBlock& BTreeDB::get_cache_block(unsigned int page_num, FileType ty
 }
 
 char* BTreeDB::get_page(unsigned int page_num, FileType type) {
-    CacheBlock& cache_get = get_cache_block(page_num, type);
+    // get the cache set this page maps to
+    CacheSet& cache_set = get_cache_set(page_num, type);
 
-    if (cache_get.page_num != page_num || !cache_get.valid) {
-        Page& page = cache_get.page;
-        cache_get.valid = true;
-
-        if (cache_get.dirty) {
-            write_page(cache_get.page_num, type);
+    // loop over the two cache blocks to check for a hit
+    for (unsigned int i = 0; i < 2; i++) {
+        // cache hit
+        if (cache_set.first[i].page_num == page_num && cache_set.first[i].valid) {
+            // set lru to the other one
+            cache_set.second = !i;
+            return cache_set.first[i].page.data();
         }
-
-        char buffer[PAGE_SIZE];
-        key_handler.seekg(page_num * PAGE_SIZE, std::ios::beg);
-
-        key_handler.read(buffer, PAGE_SIZE);
-        memcpy(page.data(), buffer, PAGE_SIZE);
-
-        cache_get.page_num = page_num;
-        cache_get.page = page;
-        cache_get.dirty = false;
     }
 
-    return cache_get.page.data();
+    //cache miss, replace lru
+    CacheBlock& block = cache_set.first[cache_set.second];
+    // set valid
+    block.valid = true;
+
+    // write if dirty
+    if (block.dirty) {
+        write_page(block.page_num, type);
+    }
+
+    // read from disk
+    char buffer[PAGE_SIZE];
+    key_handler.seekg(page_num * PAGE_SIZE, std::ios::beg);
+
+    key_handler.read(buffer, PAGE_SIZE);
+    // copy to the block
+    memcpy(block.page.data(), buffer, PAGE_SIZE);
+
+    // no longer dirty and replace page number
+    block.page_num = page_num;
+    block.dirty = false;
+
+    // swap lru
+    cache_set.second = !cache_set.second;
+
+    return block.page.data();
 }
 
 void BTreeDB::serialize_value(const ValueEntry* const source, char* dest) const {
