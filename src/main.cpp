@@ -8,12 +8,17 @@
 int main() {
     BTreeDB db("keys.db", "values.db");
 
-    // ValueEntry entry;
-    // entry.name.fill(1);
-    // entry.temp = 500;
-    // db.insert(5, entry);
 
-    std::cout << db.find(5).temp << std::endl;
+
+    for (int i = 0; i < 1000; i++) {
+        ValueEntry entry;
+        entry.temp = i;
+        db.insert(i, entry);
+    }
+
+    for (int i = 0; i < 1000; i++) {
+        std::cout << db.find(i).temp << std::endl;
+    }
 
     
     

@@ -413,16 +413,17 @@ void BTreeDB::ValuePageInterface::set_value(ValueEntry& entry, unsigned int entr
 
 unsigned int BTreeDB::ValuePageInterface::push(ValueEntry& entry) {
     tree_->num_entries += 1;
-    unsigned int page_num = tree_->num_entries / ENTRIES_PER_PAGE;
-    if (page_num == tree_->num_value_pages) {
+
+    if (tree_->num_value_pages == 0 || get_size(tree_->num_value_pages - 1) == ENTRIES_PER_PAGE) {
         tree_->num_value_pages += 1;
         std::array<char, PAGE_SIZE> new_value_page;
         new_value_page.fill(DEFAULT_VAL);
         tree_->value_handler.write(new_value_page.data(), PAGE_SIZE);
     } 
-    set_size(get_size(page_num) + 1, page_num);
+    
+    set_size(get_size(tree_->num_value_pages - 1) + 1, tree_->num_value_pages - 1);
     set_value(entry, tree_->num_entries - 1);
-    tree_->set_dirty(page_num, Value);
+    tree_->set_dirty(tree_->num_value_pages - 1, Value);
 
     return tree_->num_entries - 1;
 }
@@ -430,6 +431,7 @@ unsigned int BTreeDB::ValuePageInterface::push(ValueEntry& entry) {
 unsigned int BTreeDB::ValuePageInterface::get_size(unsigned int page_num) const {
     if (page_num >= tree_->num_value_pages) {
         tree_->write_all();
+        std::cout << page_num << ' ' << tree_->num_value_pages << std::endl;
         throw std::runtime_error("entry num out of bounds size get");
     }
     char* data = tree_->get_page(page_num, Value);
