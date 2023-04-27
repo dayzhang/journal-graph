@@ -1,5 +1,5 @@
-#include "journalGraph.h"
+#include "authorGraph.h"
 
-std::vector<std::string> journalGraph::dijkstrasShortestPath(const std::string& start, const std::string& dest) {
+std::vector<std::string> AuthorGraph::dijkstrasShortestPath(const std::string& start, const std::string& dest) {
     return std::vector<std::string>();
 }
