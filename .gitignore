@@ -1,0 +1,8 @@
+Dockerfile
+.devcontainer
+dblp_v14.json
+cleaning/dblp.v12.json
+build/
+build/main
+!build/test.db
+data/dblp.v12.json
