@@ -67,7 +67,7 @@ include CMakeFiles/clean-all.dir/compiler_depend.make
 include CMakeFiles/clean-all.dir/progress.make
 
 CMakeFiles/clean-all:
-	/usr/bin/cmake -E remove /workspaces/journal-graph/build/main
+	/usr/bin/cmake -E remove /workspaces/journal-graph/build/main /workspaces/journal-graph/build/run_tests
 
 clean-all: CMakeFiles/clean-all
 clean-all: CMakeFiles/clean-all.dir/build.make

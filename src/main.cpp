@@ -1,27 +1,13 @@
 #include <iostream>
+#include <utility>
+#include "utils.cpp"
 #include "../Dataset/parsing.cpp"
-#include "journalGraph.cpp"
-#include "../storage/btree_db.cpp"
+#include "journalGraph.h"
 #define exit_failure 0
 #define exit_success 1
 
 int main() {
-    BTreeDB db("keys.db", "values.db");
-
-
-
-    for (int i = 0; i < 1000; i++) {
-        ValueEntry entry;
-        entry.temp = i;
-        db.insert(i, entry);
-    }
-
-    for (int i = 0; i < 1000; i++) {
-        std::cout << db.find(i).temp << std::endl;
-    }
-
-    
-    
-
-    return 1;
+    std::cout << "CS225 Project by Daniel Zhang, Ian Zhang, Kevin Chen, and Jenny Hu" << "\n";
+    run_dfs();
+    return exit_success;
 }

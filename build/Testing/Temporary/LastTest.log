@@ -1,0 +1,19 @@
+Start testing: Apr 25 02:41 UTC
+----------------------------------------------------------
+Unable to find executable: tests_NOT_BUILT-b12d07c
+1/1 Testing: tests_NOT_BUILT-b12d07c
+1/1 Test: tests_NOT_BUILT-b12d07c
+Command: ""
+Directory: /workspaces/journal-graph/build
+"tests_NOT_BUILT-b12d07c" start time: 
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"tests_NOT_BUILT-b12d07c" end time: Apr 25 02:41 UTC
+"tests_NOT_BUILT-b12d07c" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Apr 25 02:41 UTC

@@ -53,6 +53,7 @@
         "utility": "cpp",
         "valarray": "cpp",
         "set": "cpp",
+<<<<<<< HEAD
         "__bit_reference": "cpp",
         "__bits": "cpp",
         "__config": "cpp",
@@ -80,5 +81,9 @@
         "unordered_set": "cpp",
         "variant": "cpp",
         "algorithm": "cpp"
+=======
+        "unordered_set": "cpp",
+        "variant": "cpp"
+>>>>>>> kevin-develop
     }
 }
