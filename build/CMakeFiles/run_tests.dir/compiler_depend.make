@@ -340,15 +340,27 @@ CMakeFiles/run_tests.dir/catch_tests/tests.cpp.o: ../catch_tests/tests.cpp \
   /usr/include/c++/11/bits/stl_numeric.h \
   /usr/include/c++/11/pstl/glue_numeric_defs.h \
   /usr/include/c++/11/any \
+  ../lib/graph_defines.h \
   /usr/include/c++/11/fstream \
   /usr/include/x86_64-linux-gnu/c++/11/bits/basic_file.h \
   /usr/include/x86_64-linux-gnu/c++/11/bits/c++io.h \
   /usr/include/c++/11/bits/fstream.tcc \
   ../src/journalGraph.cpp \
   ../src/journalGraph.h \
+  /usr/include/c++/11/stack \
+  /usr/include/c++/11/deque \
+  /usr/include/c++/11/bits/stl_deque.h \
+  /usr/include/c++/11/bits/deque.tcc \
+  /usr/include/c++/11/bits/stl_stack.h \
   ../src/authorGraph.cpp \
   ../src/authorGraph.h
 
+
+/usr/include/c++/11/bits/deque.tcc:
+
+/usr/include/c++/11/deque:
+
+/usr/include/c++/11/stack:
 
 /usr/include/c++/11/bits/fstream.tcc:
 
@@ -519,6 +531,8 @@ CMakeFiles/run_tests.dir/catch_tests/tests.cpp.o: ../catch_tests/tests.cpp \
 /usr/include/c++/11/bits/basic_string.h:
 
 /usr/include/x86_64-linux-gnu/bits/endian.h:
+
+/usr/include/c++/11/bits/stl_deque.h:
 
 /usr/include/x86_64-linux-gnu/gnu/stubs.h:
 
@@ -888,6 +902,8 @@ CMakeFiles/run_tests.dir/catch_tests/tests.cpp.o: ../catch_tests/tests.cpp \
 
 /usr/include/c++/11/bits/stl_algo.h:
 
+/usr/include/c++/11/bits/stl_stack.h:
+
 /usr/include/catch2/internal/catch_decomposer.hpp:
 
 /usr/include/catch2/internal/catch_config_wchar.hpp:
@@ -975,6 +991,8 @@ CMakeFiles/run_tests.dir/catch_tests/tests.cpp.o: ../catch_tests/tests.cpp \
 /usr/include/c++/11/bits/parse_numbers.h:
 
 /usr/include/catch2/internal/catch_message_info.hpp:
+
+../lib/graph_defines.h:
 
 /usr/include/c++/11/bits/fs_fwd.h:
 

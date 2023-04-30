@@ -39,13 +39,13 @@ bool verify_valid_parsed_data(std::vector<std::vector<std::string>>& parsed_refe
 
 TEST_CASE("Ensure Parser Works as Intended") {
     // Test code goes here
-    std::vector<std::vector<std::string>> parsed_references;
-    REQUIRE(parse_references(parsed_references, "../data/sample_data_unserialized.json"));
+    std::vector<std::vector<unsigned long>> parsed_references;
+    REQUIRE(parse_references(parsed_references, "../data/dblp.v12.json"));
 }
 
 TEST_CASE("Ensure valid AuthorGraph") {
-    std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> node_data; 
-    parse_authors(node_data, "../data/sample_data_unserialized.json");
+    std::vector<author_parse_wrapper> node_data; 
+    parse_authors(node_data, "../data/dblp.v12.json");
     AuthorGraph g(node_data);
     g.print_graph();
 }
