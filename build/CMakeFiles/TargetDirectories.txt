@@ -1,4 +1,0 @@
-/workspaces/journal-graph/build/CMakeFiles/main.dir
-/workspaces/journal-graph/build/CMakeFiles/clean-all.dir
-/workspaces/journal-graph/build/CMakeFiles/edit_cache.dir
-/workspaces/journal-graph/build/CMakeFiles/rebuild_cache.dir
