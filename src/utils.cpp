@@ -4,6 +4,7 @@
 #include <vector>
 #include "../Dataset/parsing.cpp"
 #include "journalGraph.cpp"
+#include "authorGraph.cpp"
 #define exit_failure 0
 #define exit_success 1
 

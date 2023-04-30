@@ -245,4 +245,6 @@ CMakeFiles/main.dir/src/main.cpp.o: \
  /usr/include/x86_64-linux-gnu/c++/11/bits/c++io.h \
  /usr/include/c++/11/bits/fstream.tcc \
  /workspaces/journal-graph/src/journalGraph.cpp \
- /workspaces/journal-graph/src/journalGraph.h
+ /workspaces/journal-graph/src/journalGraph.h \
+ /workspaces/journal-graph/src/authorGraph.cpp \
+ /workspaces/journal-graph/src/authorGraph.h

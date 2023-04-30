@@ -2,10 +2,12 @@
 #include <catch2/catch_test_macros.hpp>
 #include "../src/utils.cpp"
 #include "../src/journalGraph.h"
+#include "../src/authorGraph.h"
+#include "../Dataset/parsing.cpp"
 
 
 bool verify_graph_properties() {
-
+    return false;
 }
 
 bool has_whitespace(std::string& test) {
@@ -16,6 +18,7 @@ bool has_whitespace(std::string& test) {
     if (test[0] == ' ' || test[test.length() - 1] == ' ') {
         return false;
     }
+    return true;
 }
 
 bool verify_valid_parsed_data(std::vector<std::vector<std::string>>& parsed_references) {
@@ -38,4 +41,11 @@ TEST_CASE("Ensure Parser Works as Intended") {
     // Test code goes here
     std::vector<std::vector<std::string>> parsed_references;
     REQUIRE(parse_references(parsed_references, "../data/sample_data_unserialized.json"));
+}
+
+TEST_CASE("Ensure valid AuthorGraph") {
+    std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> node_data; 
+    parse_authors(node_data, "../data/sample_data_unserialized.json");
+    AuthorGraph g(node_data);
+    g.print_graph();
 }

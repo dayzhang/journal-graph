@@ -279,4 +279,6 @@ CMakeFiles/run_tests.dir/catch_tests/tests.cpp.o: \
  /usr/include/x86_64-linux-gnu/c++/11/bits/c++io.h \
  /usr/include/c++/11/bits/fstream.tcc \
  /workspaces/journal-graph/catch_tests/../src/journalGraph.cpp \
- /workspaces/journal-graph/catch_tests/../src/journalGraph.h
+ /workspaces/journal-graph/catch_tests/../src/journalGraph.h \
+ /workspaces/journal-graph/catch_tests/../src/authorGraph.cpp \
+ /workspaces/journal-graph/catch_tests/../src/authorGraph.h
