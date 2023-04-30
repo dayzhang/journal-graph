@@ -113,22 +113,10 @@ std::vector<std::string> journalGraph::getIdeaHistory(const std::string& source)
         return std::vector<std::string>();
     }
 
-<<<<<<< HEAD
-    std::vector<size_t> record;
-    // std::cout << __LINE__ << std::endl;
-
-    dfs(name_to_id_.at(source), record);
-    // std::cout << __LINE__ << std::endl;
-
-    std::vector<std::string> out;
-    for (size_t id : record) out.push_back(id_to_name_.at(id));
-    return out;
-=======
     std::unordered_map<std::string, int> seen;
     std::string root("root");
     seen[root] = -1;
     std::vector<std::string> record;
     dfs(source, root, seen, record);
     return record;
->>>>>>> kevin-develop
 }
