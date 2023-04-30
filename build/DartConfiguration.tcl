@@ -11,7 +11,7 @@ BuildDirectory: /workspaces/journal-graph/build
 CostDataFile: 
 
 # Site is something like machine.domain, i.e. pragmatic.crd
-Site: a4939c773118
+Site: 3267b744a9f3
 
 # Build name is osname-revision-compiler, i.e. Linux-2.4.2-2smp-c++
 BuildName: Linux-c++

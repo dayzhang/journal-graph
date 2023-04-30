@@ -18,9 +18,6 @@
 BUILD_TESTING:BOOL=ON
 
 //Path to a program.
-CCACHE_FOUND:FILEPATH=CCACHE_FOUND-NOTFOUND
-
-//Path to a program.
 CMAKE_ADDR2LINE:FILEPATH=/usr/bin/addr2line
 
 //Path to a program.
@@ -247,16 +244,7 @@ MEMORYCHECK_COMMAND:FILEPATH=/usr/bin/valgrind
 MEMORYCHECK_SUPPRESSIONS_FILE:FILEPATH=
 
 //Name of the computer/site where compile is being run
-SITE:STRING=a4939c773118
-
-//Value Computed by CMake
-VERSION_BINARY_DIR:STATIC=/workspaces/journal-graph/build
-
-//Value Computed by CMake
-VERSION_IS_TOP_LEVEL:STATIC=ON
-
-//Value Computed by CMake
-VERSION_SOURCE_DIR:STATIC=/workspaces/journal-graph
+SITE:STRING=3267b744a9f3
 
 //Value Computed by CMake
 myproject_BINARY_DIR:STATIC=/workspaces/journal-graph/build
