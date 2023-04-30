@@ -30,6 +30,11 @@ struct ValueEntry {
     int temp;
 };
 
+struct AuthorEntry {
+    std::array<char, 40> name;
+    std::array<char, 100> organization;
+};
+
 class BTreeDB {
     private: 
 

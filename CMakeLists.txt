@@ -8,7 +8,7 @@ set(CMAKE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 # Add the source directory to the include path
 include_directories(${CMAKE_SOURCE_DIR})
 
-add_executable(main ${CMAKE_SOURCE_DIR}/src/main.cpp)
+add_executable(main ${CMAKE_SOURCE_DIR}/src/main.cpp ${CMAKE_SOURCE_DIR}/dependencies/simdjson.cpp)
 
 add_custom_target(clean-all
     COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/main
