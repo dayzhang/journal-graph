@@ -12,7 +12,6 @@ int main() {
     std::vector<author_parse_wrapper> p;
     parse_authors(p, "../data/tarjanstest.json");
     AuthorGraph g(p);
-    g.print_graph();
     std::vector<std::vector<unsigned long>> scc = g.tarjansSCC();
     for (auto& i : scc) {
         std::cout << "Strongly Connected Component | ";

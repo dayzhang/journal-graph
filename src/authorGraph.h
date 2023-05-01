@@ -34,11 +34,11 @@ private:
         }
     };
     std::vector<std::vector<unsigned long>> findSCC(std::unordered_map<unsigned long, tarjans_t>& tarjans_data, std::stack<unsigned long>& scc_stack, int& id);
-    void tarjansSearch(std::vector<std::vector<unsigned long>>& ans, int current_id, std::unordered_map<unsigned long, tarjans_t>& tarjans_data, std::stack<unsigned long>& scc_stack, int& id);
+    void tarjansSearch(std::vector<std::vector<unsigned long>>& ans, const unsigned long& current_id, std::unordered_map<unsigned long, tarjans_t>& tarjans_data, std::stack<unsigned long>& scc_stack, int& id);
     bool addEdge(float weight, const unsigned long& id1, const unsigned long& id2); //return false if fails to add
     void add_same_paper_authors(const std::vector<unsigned long>& authors_in_paper);
     void add_referenced_authors(const std::vector<unsigned long>& authors_in_paper, const std::vector<unsigned long>& authors_referenced);
-    
+
 public:
     AuthorGraph() = default; // subsetting author graphs: Only consider most significant (first) author for each paper
     AuthorGraph(const std::vector<author_parse_wrapper>& node_data);

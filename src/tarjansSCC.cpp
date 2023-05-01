@@ -1,7 +1,5 @@
 #include "authorGraph.h"
 #include <stack>
-#include <utility>
-#include <algorithm>
 /* data type defined as
 struct tarjans_t {
     int disc;
@@ -31,20 +29,26 @@ std::vector<std::vector<unsigned long>> AuthorGraph::tarjansSCC() {
 }
 
 std::vector<std::vector<unsigned long>> AuthorGraph::findSCC(std::unordered_map<unsigned long, tarjans_t>& tarjans_data, std::stack<unsigned long>& scc_stack, int& id) {
+
     std::vector<std::vector<unsigned long>> all_SCCs;
+
     for (auto& ids : graph) {
         if (tarjans_data[ids.first].disc == unvisited) {
+            std::cout << ids.first << "\n";
             tarjansSearch(all_SCCs, ids.first, tarjans_data, scc_stack, id);
         }
     }
+
     return all_SCCs;
 }
 
-void AuthorGraph::tarjansSearch(std::vector<std::vector<unsigned long>>& ans, int current_id, std::unordered_map<unsigned long, tarjans_t>& tarjans_data, std::stack<unsigned long>& scc_stack, int& id) {
-    scc_stack.push(current_id);
+void AuthorGraph::tarjansSearch(std::vector<std::vector<unsigned long>>& ans, const unsigned long& current_id, std::unordered_map<unsigned long, tarjans_t>& tarjans_data, std::stack<unsigned long>& scc_stack, int& id) {
+
     bool& _on_stack = tarjans_data[current_id].on_stack;
     int& _low_link = tarjans_data[current_id].low_link;
     int& _disc = tarjans_data[current_id].disc;
+
+    scc_stack.push(current_id);
     _on_stack = true;
     _disc = _low_link = id++;
     
@@ -58,18 +62,22 @@ void AuthorGraph::tarjansSearch(std::vector<std::vector<unsigned long>>& ans, in
         }
     }
 
+    unsigned long node = 0;
     if (_disc == _low_link) {
         std::vector<unsigned long> strongly_connected;
-        while (true) {
-            unsigned long node = scc_stack.top();
-            scc_stack.pop();
-            tarjans_data[node].on_stack = false;
+
+        while (scc_stack.top() != current_id) { //while the stack is not at ID
+            node = scc_stack.top();
             strongly_connected.push_back(node);
-            if (node == current_id) {
-                break;
-            }
+            tarjans_data[node].on_stack = false;
+            scc_stack.pop();
         }
-        if (strongly_connected.size() > 1) {
+        std::cout << current_id << "\n";
+        strongly_connected.push_back(current_id);
+        _on_stack = false;
+        scc_stack.pop();
+
+        if (strongly_connected.size() > 1) { //dont really care about single node SCC
             ans.push_back(strongly_connected);
         }
     }
