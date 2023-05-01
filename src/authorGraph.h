@@ -3,6 +3,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <limits>
+#include <queue>
 
 #define author_edge_limit 3
 #define same_paper_weight float(1) / float(5)
@@ -21,7 +23,7 @@ class AuthorGraph {
 
 public:
 
-    AuthorGraph(); // subsetting author graphs: Only consider most significant (first) author for each paper
+    AuthorGraph() = default; // subsetting author graphs: Only consider most significant (first) author for each paper
     AuthorGraph(const std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>>& node_data);
     AuthorGraph(AuthorGraph& other_graph);
     ~AuthorGraph() = default;
