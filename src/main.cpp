@@ -1,24 +1,23 @@
 #include <iostream>
-#include "../Dataset/parsing.cpp"
-#include "journalGraph.cpp"
-#include "../storage/btree_db.cpp"
-#define exit_failure 0
-#define exit_success 1
+
+#include "../parsing/parsing.h"
+// #include "../storage/btree_db.hpp"
+#include "../storage/btree_types.cpp"
 
 int main() {
-    BTreeDB db("keys.db", "values.db");
+    // BTreeDB<test::Entry> db("keys.db", "values.db");
 
+    // // for (unsigned int i = 0; i < 10000; ++i) {
+    // //     test::Entry temp(i);
+    // //     db.insert(i, temp);
+    // // }
 
+    // for (unsigned int i = 0; i < 10000; ++i) {
+    //     std::cout << db.find(i).x << std::endl;;
+    // }
 
-    for (int i = 0; i < 1000; i++) {
-        ValueEntry entry;
-        entry.temp = i;
-        db.insert(i, entry);
-    }
+    traverse_data("../data/dblp.v12.json");
 
-    for (int i = 0; i < 1000; i++) {
-        std::cout << db.find(i).temp << std::endl;
-    }
 
     
     

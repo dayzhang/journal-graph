@@ -13,6 +13,7 @@
 #include <cstring>
 #include <vector>
 #include <sys/mman.h>
+#include <unordered_map>
 
 #define CACHE_SIZE 64
 #define ORDER 337
@@ -50,24 +51,13 @@ class BTreeDB {
         /**
             This struct is how cache blocks are stored. page_num is what page the block is referring to. dirty is whether the block should be written back in case of a cache miss. valid is whether the block is actually filled with valid data. page is the actual data contained within the block.
         */
+
         struct CacheBlock {
-            unsigned int page_num;
-            bool dirty;
-            bool valid;
-            Page page;
-            CacheBlock(): page_num(0), dirty(false), valid(false) {
-                page.fill(DEFAULT_VAL);
-            }
+            char* data = nullptr;
+            bool dirty = false;
         };
 
-        const unsigned int values_per_page = PAGE_SIZE / T::size - 1;
-
-        std::hash<unsigned int> h;
-
-        /**
-            A cache set is a pair of cache block with an lru bit.
-        */
-        typedef std::pair<std::array<CacheBlock, 2>, bool> CacheSet;
+        const unsigned int values_per_page = (PAGE_SIZE - 4) / T::size - 1;
 
         /**
             This struct is how the header of key pages are structured, although it is unused. num_cells is the number of key-pointer pairs are in the page, node_type is whether the page is internal (1) or a leaf (not 1), is_root is whether the page is the root (1) or not (not 1), parent_ptr is the page number of the parent pointer or CHAR_MAX if it doesn't have one, and next_ptr is the next node on the same level the page points to (if this page is a leaf).
@@ -101,11 +91,12 @@ class BTreeDB {
         /**
             Cache for the key pages. Has 10 cache sets and is 2-way associative.
         */
-        std::array<CacheSet, CACHE_SIZE> key_cache;
+        std::unordered_map<unsigned int, CacheBlock> key_cache;
+        
         /**
             Cache for the value pages. Has 10 cache sets and is 2-way associative.
         */
-        std::array<CacheSet, CACHE_SIZE> value_cache;
+        std::unordered_map<unsigned int, CacheBlock> value_cache;
 
         /**
             File handler for the key database (read and write access).
@@ -402,12 +393,12 @@ class BTreeDB {
         */
         void set_dirty(unsigned int page_num, FileType type);
 
-        /**
-            Helper function for mapping page numbers to cache entries. Is currently a naive modulus
+        // /**
+        //     Helper function for mapping page numbers to cache entries. Is currently a naive modulus
 
-            @param page_num The page to get a mapping to cache for
-        */
-        unsigned int get_page_idx(unsigned int page_num) const;
+        //     @param page_num The page to get a mapping to cache for
+        // */
+        // unsigned int get_page_idx(unsigned int page_num) const;
 
         /**
             Helper function to write a page_num to the file database.
@@ -424,7 +415,7 @@ class BTreeDB {
             @param type whether to read from the key or value caches
             @return a reference to the cacheblock the page num is associated with
         */
-        std::pair<std::array<BTreeDB::CacheBlock, 2>, bool>& get_cache_set(unsigned int page_num, FileType type);
+        // std::pair<std::array<BTreeDB::CacheBlock, 2>, bool>& get_cache_set(unsigned int page_num, FileType type);
 
         /**
             Gets the actual data of a given page number. Handles cache misses and cache hits implicitly.
@@ -540,23 +531,20 @@ BTreeDB<T>::BTreeDB(const std::string& key_filename, const std::string& values_f
     for (unsigned int i = 0; i < PAGE_SIZE; ++i) {
         empty_array[i] = 0;
     }
-
-    memset(&key_cache, 0, sizeof(key_cache));
-    memset(&value_cache, 0, sizeof(value_cache));
 }
 template <typename T>
 void BTreeDB<T>::write_all() {
-    for (unsigned int i = 0; i < CACHE_SIZE; ++i) {
-        for (CacheBlock& block : key_cache.at(i).first) {
-            if (block.dirty) {
-                write_page(block.page_num, Key);
-            }
+    for (const auto& entry : key_cache) {
+        if (entry.second.data != nullptr && entry.second.dirty) {
+            write_page(entry.first, Key);
+            delete[] entry.second.data;
         }
-
-        for (CacheBlock& block2 : value_cache.at(i).first) {
-            if (block2.dirty) {
-                write_page(block2.page_num, Value);
-            }
+    }
+    
+    for (const auto& entry : value_cache) {
+        if (entry.second.data != nullptr && entry.second.dirty) {
+            write_page(entry.first, Value);
+            delete[] entry.second.data;
         }
     }
 
@@ -1025,21 +1013,28 @@ unsigned int BTreeDB<T>::KeyPageInterface::find_pos(long key) const {
 
 template <typename T>
 void BTreeDB<T>::set_dirty(unsigned int page_num, FileType type) {
-    CacheSet& set = get_cache_set(page_num, type);
-    for (CacheBlock& block : set.first) {
-        if (block.page_num == page_num && block.valid) {
-            block.dirty = true;
+    switch (type) {
+        case Key: {
+            if (key_cache.find(page_num) == key_cache.end()) {
+                throw std::runtime_error("page_num not in key cache");
+            }
+            key_cache.at(page_num).dirty = true;
+            return;
+        }
+        case Value: {
+            if (value_cache.find(page_num) == value_cache.end()) {
+                throw std::runtime_error("page_num not in value cache");
+            }
+            value_cache.at(page_num).dirty = true;
             return;
         }
     }
-    write_all();
-    throw std::runtime_error("page_num not in cache");
 }
 
-template <typename T>
-unsigned int BTreeDB<T>::get_page_idx(unsigned int page_num) const {
-    return h(page_num) % CACHE_SIZE;
-}
+// template <typename T>
+// unsigned int BTreeDB<T>::get_page_idx(unsigned int page_num) const {
+//     return h(page_num) % CACHE_SIZE;
+// }
 
 template <typename T>
 void BTreeDB<T>::write_page(unsigned int page_num, FileType type) {
@@ -1059,81 +1054,59 @@ void BTreeDB<T>::write_page(unsigned int page_num, FileType type) {
     }
 }
 
-template <typename T>
-typename BTreeDB<T>::CacheSet& BTreeDB<T>::get_cache_set(unsigned int page_num, FileType type) {
-    switch(type) {
-        case Key: {
-            if (page_num >= num_key_pages) {
-                write_all();
-                throw std::runtime_error("requested key page out of bounds");
-            }
-            return key_cache[get_page_idx(page_num)];
-        }
-        case Value: {
-            if (page_num >= num_value_pages) {
-                write_all();
-                throw std::runtime_error("requested value page out of bounds");
-            }
-            return value_cache[get_page_idx(page_num)];
-        }
-        default: {
-            write_all();
-            throw std::runtime_error("invalid filetype");
-        }
-    }
-}
+// template <typename T>
+// typename BTreeDB<T>::CacheSet& BTreeDB<T>::get_cache_set(unsigned int page_num, FileType type) {
+//     switch(type) {
+//         case Key: {
+//             if (page_num >= num_key_pages) {
+//                 write_all();
+//                 throw std::runtime_error("requested key page out of bounds");
+//             }
+//             return key_cache[get_page_idx(page_num)];
+//         }
+//         case Value: {
+//             if (page_num >= num_value_pages) {
+//                 write_all();
+//                 throw std::runtime_error("requested value page out of bounds");
+//             }
+//             return value_cache[get_page_idx(page_num)];
+//         }
+//         default: {
+//             write_all();
+//             throw std::runtime_error("invalid filetype");
+//         }
+//     }
+// }
 
 template <typename T>
 char* BTreeDB<T>::get_page(unsigned int page_num, FileType type) {
     // get the cache set this page maps to
-    CacheSet& cache_set = get_cache_set(page_num, type);
-
-    // loop over the two cache blocks to check for a hit
-    for (unsigned int i = 0; i < 2; i++) {
-        // cache hit
-        if (cache_set.first[i].page_num == page_num && cache_set.first[i].valid) {
-            // set lru to the other one
-            cache_set.second = !i;
-            return cache_set.first[i].page.data();
-        }
-    }
-
-    //cache miss, replace lru
-    CacheBlock& block = cache_set.first[cache_set.second];
-    // set valid
-    block.valid = true;
-
-    // write if dirty
-    if (block.dirty) {
-        write_page(block.page_num, type);
-    }
-
-    // read from disk
-    char buffer[PAGE_SIZE];
-    
-    switch (type) {
+    char* data = nullptr;
+    switch(type) {
         case Key: {
-            key_handler.seekg(page_num * PAGE_SIZE, std::ios::beg);
-            key_handler.read(buffer, PAGE_SIZE);
-            break;
+            if (key_cache.find(page_num) != key_cache.end()) {
+                return key_cache.at(page_num).data;
+            }
+
+            key_cache[page_num] = CacheBlock();
+            key_cache[page_num].data = new char[PAGE_SIZE];
+            key_handler.seekg(page_num * PAGE_SIZE);
+            key_handler.read(key_cache.at(page_num).data, PAGE_SIZE);
+            return key_cache.at(page_num).data;
         }
         case Value: {
-            value_handler.seekg(page_num * PAGE_SIZE, std::ios::beg);
-            value_handler.read(buffer, PAGE_SIZE);
-            break;
+            if (value_cache.find(page_num) != value_cache.end()) {
+                return value_cache.at(page_num).data;
+            }
+
+            value_cache[page_num] = CacheBlock();
+            value_cache[page_num].data = new char[PAGE_SIZE];
+            value_handler.seekg(page_num * PAGE_SIZE);
+            value_handler.read(value_cache.at(page_num).data, PAGE_SIZE);
+            return value_cache.at(page_num).data;
         }
     }
-
-    memcpy(block.page.data(), buffer, PAGE_SIZE);
-
-    // no longer dirty and replace page number
-    block.page_num = page_num;
-    block.dirty = false;
-
-    // swap lru
-    cache_set.second = !cache_set.second;
-
-    return block.page.data();
+    throw std::runtime_error("something went wrong");
 }
 
 // void BTreeDB::serialize_value(const ValueEntry* const source, char* dest) const {

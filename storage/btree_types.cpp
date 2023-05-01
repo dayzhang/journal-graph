@@ -1,23 +1,30 @@
+#pragma once
+
 #include <array>
 #include <cstring>
 #include <string>
 #include <vector>
+#include <iostream>
 
 namespace author {
     struct Entry {
-        std::array<char, 40> name;
-        std::array<char, 100> organization;
+        std::array<char, 32> name;
+        std::array<char, 56> organization;
         long id;
 
         Entry(const std::string& author_name, const std::string& author_org, long set_id): id(set_id) {
-            if (author_name.size() >= 40) {
-                strcpy(name.data(), author_name.substr(0, 39).c_str());
+            // std::cout << author_name << std::endl;
+            name.fill(0);
+            organization.fill(0);
+            // organization.fill(0);
+            if (author_name.size() >= 32) {
+                strcpy(name.data(), author_name.substr(0, 31).c_str());
             } else {
                 strcpy(name.data(), author_name.c_str());
             }
 
-            if (author_org.size() >= 100) {
-                strcpy(organization.data(), author_org.substr(0, 99).c_str());
+            if (author_org.size() >= 56) {
+                strcpy(organization.data(), author_org.substr(0, 55).c_str());
             } else {
                 strcpy(organization.data(), author_org.c_str());
             }
@@ -26,18 +33,18 @@ namespace author {
         Entry() {}
 
         static void deserialize_value(char* source, Entry* dest) {
-            memcpy(dest->name.data(), source, 40);
-            memcpy(dest->organization.data(), source + 40, 100);
-            memcpy(&(dest->id), source + 140, 8);
+            memcpy(dest->name.data(), source, 32);
+            memcpy(dest->organization.data(), source + 32, 56);
+            memcpy(&(dest->id), source + 88, 8);
         }
 
         static void serialize_value(Entry* source, char* dest) {
-            memcpy(dest, source->name.data(), 40);
-            memcpy(dest + 40, source->organization.data(), 100);
-            memcpy(dest + 140, &(source->id), 8);
+            memcpy(dest, source->name.data(), 32);
+            memcpy(dest + 32, source->organization.data(), 56);
+            memcpy(dest + 88, &(source->id), 8);
         }
 
-        static const unsigned int size = 148;
+        static const unsigned int size = 32 + 56 + 8;
 
         bool operator=(const Entry& other) {
             return std::string(name.data()) == std::string(other.name.data());
@@ -48,8 +55,8 @@ namespace author {
 namespace paper {
     struct Entry {
         std::array<char, 60> title;
-        std::array<char, 60> keywords;
-        std::array<char, 40> venue;
+        std::array<char, 40> keywords;
+        std::array<char, 24> venue;
         std::array<long, 10> authors;
 
         unsigned int n_citations;
@@ -57,6 +64,10 @@ namespace paper {
         long id;
 
         Entry(std::string& paper_title, std::string& paper_keywords, std::string& paper_venue, unsigned int paper_citations, unsigned int paper_year, std::vector<long> paper_authors, long set_id): n_citations(paper_citations), pub_year(paper_year), id(set_id) {
+            title.fill(0);
+            keywords.fill(0);
+            venue.fill(0);
+            authors.fill(0);
             if (title.size() >= 60) {
                 strcpy(title.data(), paper_title.substr(0, 59).c_str());
             } else {
