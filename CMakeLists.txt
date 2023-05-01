@@ -7,8 +7,8 @@ project(myproject)
 set(CMAKE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR})
 
-add_executable(main ${CMAKE_SOURCE_DIR}/src/main.cpp ${CMAKE_SOURCE_DIR}/lib/simdjson.h ${CMAKE_SOURCE_DIR}/graph/authorGraph.h ${CMAKE_SOURCE_DIR}/graph/journalGraph.h)
-add_executable(parse ${CMAKE_SOURCE_DIR}/src/parse_data.cpp ${CMAKE_SOURCE_DIR}/lib/simdjson.h ${CMAKE_SOURCE_DIR}/parsing/parsing.h)
+add_executable(main ${CMAKE_SOURCE_DIR}/src/main.cpp ${CMAKE_SOURCE_DIR}/lib/simdjson.cpp ${CMAKE_SOURCE_DIR}/graph/authorGraph.cpp ${CMAKE_SOURCE_DIR}/graph/journalGraph.cpp)
+add_executable(parse ${CMAKE_SOURCE_DIR}/src/parse.cpp ${CMAKE_SOURCE_DIR}/lib/simdjson.cpp ${CMAKE_SOURCE_DIR}/parsing/parsing.cpp ${CMAKE_SOURCE_DIR}/graph/journalGraph.cpp)
 
 add_executable(run_tests ${CMAKE_SOURCE_DIR}/catch_tests/tests.cpp)
 

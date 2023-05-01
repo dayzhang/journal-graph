@@ -54,39 +54,32 @@ namespace author {
 
 namespace paper {
     struct Entry {
-        std::array<char, 60> title;
+        std::array<char, 96> title;
         std::array<char, 40> keywords;
-        std::array<char, 24> venue;
-        std::array<long, 10> authors;
+        std::array<long, 8> authors;
 
         unsigned int n_citations;
         unsigned int pub_year;
         long id;
 
-        Entry(std::string& paper_title, std::string& paper_keywords, std::string& paper_venue, unsigned int paper_citations, unsigned int paper_year, std::vector<long> paper_authors, long set_id): n_citations(paper_citations), pub_year(paper_year), id(set_id) {
+        Entry(std::string& paper_title, std::string& paper_keywords, unsigned int paper_citations, unsigned int paper_year, std::vector<long> paper_authors, long set_id): n_citations(paper_citations), pub_year(paper_year), id(set_id) {
             title.fill(0);
             keywords.fill(0);
-            venue.fill(0);
             authors.fill(0);
-            if (title.size() >= 60) {
-                strcpy(title.data(), paper_title.substr(0, 59).c_str());
+
+            if (title.size() >= 96) {
+                strcpy(title.data(), paper_title.substr(0, 95).c_str());
             } else {
                 strcpy(title.data(), paper_title.c_str());
             }
 
-            if (paper_keywords.size() >= 60) {
-                strcpy(title.data(), paper_keywords.substr(0, 59).c_str());
+            if (paper_keywords.size() >= 40) {
+                strcpy(keywords.data(), paper_keywords.substr(0, 39).c_str());
             } else {
-                strcpy(title.data(), paper_keywords.c_str());
+                strcpy(keywords.data(), paper_keywords.c_str());
             }
 
-            if (paper_venue.size() >= 40) {
-                strcpy(title.data(), paper_venue.substr(0, 39).c_str());
-            } else {
-                strcpy(title.data(), paper_venue.c_str());
-            }
-
-            for (unsigned int i = 0; i < 10; ++i) {
+            for (unsigned int i = 0; i < 8; ++i) {
                 authors[i] = paper_authors[i];
             }
         }
@@ -94,26 +87,24 @@ namespace paper {
         Entry() {}
 
         static void deserialize_value(char* source, Entry* dest) {
-            memcpy(dest->title.data(), source, 60);
-            memcpy(dest->keywords.data(), source + 60, 60);
-            memcpy(dest->venue.data(), source + 120, 40);
-            memcpy(dest->authors.data(), source + 160, 80);
-            memcpy(&(dest->n_citations), source + 240, 4);
-            memcpy(&(dest->pub_year), source + 244, 4);
-            memcpy(&(dest->id), source + 258, 8);
+            memcpy(dest->title.data(), source, 96);
+            memcpy(dest->keywords.data(), source + 96, 40);
+            memcpy(dest->authors.data(), source + 136, 64);
+            memcpy(&(dest->n_citations), source + 200, 4);
+            memcpy(&(dest->pub_year), source + 204, 4);
+            memcpy(&(dest->id), source + 208, 8);
         }
 
         static void serialize_value(Entry* source, char* dest) {
-            memcpy(dest, source->title.data(), 60);
-            memcpy(dest + 60, source->keywords.data(), 60);
-            memcpy(dest + 120, source->venue.data(), 40);
-            memcpy(dest + 160, source->authors.data(), 80);
-            memcpy(dest + 240, &(source->n_citations), 4);
-            memcpy(dest + 244, &(source->pub_year), 4);
-            memcpy(dest + 248, &(source->id), 8);
+            memcpy(dest, source->title.data(), 96);
+            memcpy(dest + 96, source->keywords.data(), 40);
+            memcpy(dest + 136, source->authors.data(), 64);
+            memcpy(dest + 200, &(source->n_citations), 4);
+            memcpy(dest + 204, &(source->pub_year), 4);
+            memcpy(dest + 208, &(source->id), 8);
         }
 
-        static const unsigned int size = 256;
+        static const unsigned int size = 96 + 40 + 8 * 8 + 4 + 4 + 8;
 
         bool operator=(const Entry& other) {
             return std::string(title.data()) == std::string(other.title.data());

@@ -1,5 +1,7 @@
 #include "journalGraph.h"
 
+#include <fstream>
+
 void journalGraph::print() {
     for (auto& pair : graph) {
         std::cout << "Start Node: " << pair.first << " | " << std::endl;
@@ -15,11 +17,8 @@ bool journalGraph::addEdge(unsigned long id1, unsigned long id2) {
         return false;
     }
 
-    if (graph.find(id2) == graph.end()) {
-        graph.insert({id2, std::vector<unsigned long>()});
-    }
-
-    graph[id1].push_back(id2);
+    graph[id2].insert(id1);
+    graph[id1].insert(id2);
     return true;
 } 
 
@@ -102,4 +101,24 @@ std::vector<std::pair<unsigned long, unsigned long>> journalGraph::getIdeaHistor
     std::vector<std::pair<unsigned long, unsigned long>> record;
     dfs(source, seen, record);
     return record;
+}
+
+void journalGraph::export_to_file(const std::string& filename) {
+    std::ofstream ofs(filename, std::ios::trunc | std::ios::binary);
+
+    int i = 0;
+    for (const auto& elem : graph) {
+        if (i == 0) {
+            i++;
+        }
+        
+        ofs.write((char*)&(elem.first), 8);
+        unsigned long size = elem.second.size();
+        ofs.write((char*)(&size), 8);
+        for (const auto& edge : elem.second) {
+            ofs.write((char*)(&edge), 8);
+        }
+    }
+
+    ofs.close();
 }

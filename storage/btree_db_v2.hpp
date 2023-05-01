@@ -525,15 +525,19 @@ void BTreeDB<T>::write_all() {
     for (const auto& entry : key_cache) {
         if (entry.second.data != nullptr && entry.second.dirty) {
             write_page(entry.first, Key);
+        } else if (entry.second.data != nullptr) {
             delete[] entry.second.data;
         }
+        
     }
     
     for (const auto& entry : value_cache) {
         if (entry.second.data != nullptr && entry.second.dirty) {
             write_page(entry.first, Value);
+        } else if (entry.second.data != nullptr) {
             delete[] entry.second.data;
         }
+        
     }
 
     key_handler.close();

@@ -2,12 +2,13 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include <stack>
 
 class journalGraph {
 
-    std::unordered_map<unsigned long, std::vector<unsigned long>> graph;//vector-based adjacency list to take advantage of cache
+    std::unordered_map<unsigned long, std::unordered_set<unsigned long>> graph;//vector-based adjacency list to take advantage of cache
     //A lot of performance issues with this as of now. Should consider switching to map-based implementations
     //For storage, will be important to consider a re-id to store as integers
     std::unordered_map<std::string, size_t> name_to_id_;
@@ -25,5 +26,7 @@ public:
     void dfs(const unsigned long& vertex, std::unordered_map<unsigned long, bool>& seen, std::vector<std::pair<unsigned long, unsigned long>>& record);
 
     void print();
+
+    void export_to_file(const std::string& filename);
 
 };

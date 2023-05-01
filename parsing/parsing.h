@@ -2,4 +2,4 @@
 
 #include <string>
 
-void traverse_data(const std::string& filename);
+void build_db(const std::string& filename);
