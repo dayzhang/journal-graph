@@ -1,4 +1,5 @@
 #include "authorGraph.h"
+
 bool AuthorGraph::addEdge(float weight, const unsigned long& first, const unsigned long& second) {
     weighted_edge new_edge(weight, second);
     graph[first].push_back(new_edge);

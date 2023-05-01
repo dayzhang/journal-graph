@@ -10,7 +10,7 @@
 int main() {
     std::cout << "CS225 Project by Daniel Zhang, Ian Zhang, Kevin Chen, and Jenny Hu" << "\n";
     std::vector<author_parse_wrapper> p;
-    parse_authors(p, "../data/dblp.v12.json");
+    parse_authors(p, "../data/tarjanstest.json");
     AuthorGraph g(p);
     std::vector<std::vector<unsigned long>> scc = g.tarjansSCC();
     for (auto& i : scc) {
