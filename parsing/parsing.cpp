@@ -1,4 +1,4 @@
-#include "../dependencies/simdjson.h"
+#include "../lib/simdjson.h"
 #include "parsing.h"
 
 #include <fstream>
