@@ -5,7 +5,7 @@
 #include <vector>
 #include <limits>
 #include <queue>
-
+#include <algorithm>
 #include "../lib/graph_defines.h"
 
 #define author_edge_limit 3
@@ -17,8 +17,9 @@ class AuthorGraph {
     struct weighted_edge {
         float weight;
         //temporary: currently, ID's are represeted as strings;
+        unsigned long source;
         unsigned long destination;
-        weighted_edge(float _weight, unsigned long _destination) : weight(_weight), destination(_destination) {}
+        weighted_edge(float _weight, unsigned long _source, unsigned long _destination) : weight(_weight), source(_source), destination(_destination) {}
     };
 
     std::unordered_map<unsigned long, std::vector<weighted_edge>> graph;
@@ -35,12 +36,11 @@ public:
     void add_referenced_authors(const std::vector<unsigned long>& authors_in_paper, const std::vector<unsigned long>& authors_referenced);
 
     void print_graph();
-    std::unordered_map<unsigned long, std::vector<weighted_edge>> getGraph();
+    std::unordered_map<unsigned long, std::vector<weighted_edge>> getGraph() { return graph; };
 
     std::vector<unsigned long> dijkstrasShortestPath(const unsigned long& start, const unsigned long& dest);
     std::vector<std::vector<unsigned long>> tarjansSCC();
     std::vector<std::vector<unsigned long>> findSCC(std::unordered_map<unsigned long, int>& id_array, std::unordered_map<unsigned long, int>& low_link, std::unordered_map<unsigned long, bool>& on_stack, std::stack<unsigned long>& scc_stack, int& id);
     void tarjansSearch(std::vector<std::vector<unsigned long>>& ans, int current_id, std::unordered_map<unsigned long, int>& id_array, std::unordered_map<unsigned long, int>& low_link, std::unordered_map<unsigned long, bool>& on_stack, std::stack<unsigned long>& scc_stack, int& id);
     //assign lowlink w/ dfs
-
 };

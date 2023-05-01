@@ -61,8 +61,9 @@ void journalGraph::dfs(const unsigned long& vertex, std::unordered_map<unsigned 
     }
 }
 
+/*
 // not entirely sure what the dfs is supposed to be for, but changed it to iterative so it doesn't exceed recursion limit
-void journalGraph::dfs(const size_t& start_node, std::vector<size_t>& record) {
+void journalGraph::dfs(const unsigned long& start_node, std::vector<size_t>& record) {
     // std::cout << __LINE__ << std::endl;
 
     std::vector<bool> seen(nodes_, false);
@@ -85,15 +86,8 @@ void journalGraph::dfs(const size_t& start_node, std::vector<size_t>& record) {
         }
     }
 }
-void journalGraph::print() {
-    for (size_t start = 0; start < nodes_; start++) {
-        std::cout << "Start Node: " << start << std::endl;
-        for (size_t other : graph_.at(start)) {
-            std::cout << other << " ";
-        }
-        std::cout << std::endl;
-    }
-}
+*/
+
 
 std::vector<std::pair<unsigned long, unsigned long>> journalGraph::getIdeaHistory(const unsigned long& source) {
     if (graph.find(source) == graph.end()) {
