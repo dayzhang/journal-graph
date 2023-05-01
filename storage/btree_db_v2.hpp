@@ -503,23 +503,11 @@ BTreeDB<T>::BTreeDB(const std::string& key_filename, const std::string& values_f
     value_handler = std::move(fs_values);
     key_handler = std::move(fs_keys);
 
-    value_handler.seekg(0, std::ios::end);
-    key_handler.seekg(0, std::ios::end);
-    unsigned int values_len = value_handler.tellg();
-    unsigned int keys_len = key_handler.tellg();
-
-
     if (!create_new) {
-        unsigned int curr = 0;
-
-        fs_meta >> curr;
-        num_entries = curr;
-        fs_meta >> curr;
-        num_value_pages = curr;
-        fs_meta >> curr;
-        num_key_pages = curr;
-        fs_meta >> curr;
-        key_root = curr;
+        fs_meta >> num_entries;
+        fs_meta >> num_value_pages;
+        fs_meta >> num_key_pages;
+        fs_meta >> key_root;
     }
 
     fs_meta.close();

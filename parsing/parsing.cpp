@@ -57,10 +57,7 @@ void traverse_data(const std::string &filename) {
             continue;
         }
 
-        unsigned int j = 0;
-
         for (ondemand::object author : authors) {
-            if (j == 5) break;
             std::string name = std::string(author.find_field("name").get_string().value());
 
             std::string org;
@@ -82,8 +79,6 @@ void traverse_data(const std::string &filename) {
             db.insert(id, entry);
 
             traversed.insert(id);
-            ++j;
-            
         }
 
 

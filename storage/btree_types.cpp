@@ -24,7 +24,7 @@ namespace author {
             }
 
             if (author_org.size() >= 56) {
-                strcpy(organization.data(), author_org.substr(0, 55).c_str());
+                strcpy(organization.data(), author_org.substr(author_org.size() - 55).c_str());
             } else {
                 strcpy(organization.data(), author_org.c_str());
             }
