@@ -7,7 +7,7 @@ project(myproject)
 set(CMAKE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR})
 
-add_executable(main ${CMAKE_SOURCE_DIR}/src/main.cpp)
+add_executable(main ${CMAKE_SOURCE_DIR}/src/main.cpp ${CMAKE_SOURCE_DIR}/dependencies/simdjson.cpp ${CMAKE_SOURCE_DIR}/parsing/parsing.cpp)
 
 add_executable(run_tests ${CMAKE_SOURCE_DIR}/catch_tests/tests.cpp)
 
