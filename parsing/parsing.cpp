@@ -81,11 +81,6 @@ void traverse_data(const std::string &filename) {
             traversed.insert(id);
         }
 
-
-
-        
-        
-
         ++i;
     }
 }

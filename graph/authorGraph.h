@@ -6,6 +6,7 @@
 #include <limits>
 #include <queue>
 #include <algorithm>
+#include <stack>
 #include "../lib/graph_defines.h"
 
 #define author_edge_limit 3
