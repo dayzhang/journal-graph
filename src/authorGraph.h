@@ -1,29 +1,46 @@
+#pragma once
 #include <iostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
-class authorGraph {
+#include <limits>
+#include <queue>
+#include <algorithm>
+#include "../lib/graph_defines.h"
+
+#define author_edge_limit 3
+#define same_paper_weight float(1) / float(5)
+#define ref_author_weight 5
+
+class AuthorGraph {
 
     struct weighted_edge {
         float weight;
         //temporary: currently, ID's are represeted as strings;
-        int num_times_cited;
-        std::string destination;
-        weighted_edge(float _weight, std::string _destination) : weight(_weight), destination(_destination) {}
+        unsigned long source;
+        unsigned long destination;
+        weighted_edge(float _weight, unsigned long _source, unsigned long _destination) : weight(_weight), source(_source), destination(_destination) {}
     };
 
-    std::unordered_map<std::string, std::vector<weighted_edge>> graph;//vector-based adjacency list to take advantage of cache
-    //A lot of performance issues with this as of now. Should consider switching to map-based implementations
-    //For storage, will be important to consider a re-id to store as integers
+    std::unordered_map<unsigned long, std::vector<weighted_edge>> graph;
+    int num_nodes;
 
 public:
 
-    authorGraph(); // subsetting author graphs: Only consider most significant (first) author for each paper
-    authorGraph(const std::vector<std::vector<std::string>>& node_data);
-    authorGraph(authorGraph& other_graph);
-    ~authorGraph();
-    bool addEdge(std::string id1, std::string id2); //return false if fails to add
-    bool adjustWeight(const std::string& id1, const std::string& id2); // adjust the weighted edge from id1 to id2. Returns false if fails to adjust
+    AuthorGraph(); // subsetting author graphs: Only consider most significant (first) author for each paper
+    AuthorGraph(const std::vector<author_parse_wrapper>& node_data);
+    AuthorGraph(AuthorGraph& other_graph);
+    ~AuthorGraph() = default;
+    bool addEdge(float weight, const unsigned long& id1, const unsigned long& id2); //return false if fails to add
+    void add_same_paper_authors(const std::vector<unsigned long>& authors_in_paper);
+    void add_referenced_authors(const std::vector<unsigned long>& authors_in_paper, const std::vector<unsigned long>& authors_referenced);
 
-    std::vector<std::string> dijkstrasShortestPath(const std::string& start, const std::string& dest);
+    void print_graph();
+    std::unordered_map<unsigned long, std::vector<weighted_edge>> getGraph() { return graph; };
+
+    std::vector<unsigned long> dijkstrasShortestPath(const unsigned long& start, const unsigned long& dest);
+    std::vector<std::vector<unsigned long>> tarjansSCC();
+    std::vector<std::vector<unsigned long>> findSCC(std::unordered_map<unsigned long, int>& id_array, std::unordered_map<unsigned long, int>& low_link, std::unordered_map<unsigned long, bool>& on_stack, std::stack<unsigned long>& scc_stack, int& id);
+    void tarjansSearch(std::vector<std::vector<unsigned long>>& ans, int current_id, std::unordered_map<unsigned long, int>& id_array, std::unordered_map<unsigned long, int>& low_link, std::unordered_map<unsigned long, bool>& on_stack, std::stack<unsigned long>& scc_stack, int& id);
+    //assign lowlink w/ dfs
 };

@@ -3,13 +3,11 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <unordered_set>
 #include <stack>
 
 class journalGraph {
 
-private:
-    std::unordered_map<size_t, std::vector<size_t>> graph_;//vector-based adjacency list to take advantage of cache
+    std::unordered_map<unsigned long, std::vector<unsigned long>> graph;//vector-based adjacency list to take advantage of cache
     //A lot of performance issues with this as of now. Should consider switching to map-based implementations
     //For storage, will be important to consider a re-id to store as integers
     std::unordered_map<std::string, size_t> name_to_id_;
@@ -19,12 +17,13 @@ private:
 public:
 
     journalGraph() = default; // subsetting author
-    journalGraph(const std::vector<std::vector<std::string>>& node_data);
+    journalGraph(const std::vector<std::vector<unsigned long>>& node_data);
     ~journalGraph() = default;
-    bool addEdge(std::string id1, std::string id2); //return false if fails to add
+    bool addEdge(unsigned long id1, unsigned long id2); //return false if fails to add
 
-    std::vector<size_t> getIdeaHistory(const size_t& source);
-    // void dfs(const std::string& vertex, std::unordered_set<std::string>& seen, std::vector<std::string>& record);
-    void dfs(const size_t& start_node, std::vector<size_t>& record);
-    std::vector<std::string> dijkstrasShortestPath(const std::string& start, const std::string& dest);
+    std::vector<std::pair<unsigned long, unsigned long>> getIdeaHistory(const unsigned long& source);
+    void dfs(const unsigned long& vertex, std::unordered_map<unsigned long, bool>& seen, std::vector<std::pair<unsigned long, unsigned long>>& record);
+
+    void print();
+
 };

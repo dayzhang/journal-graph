@@ -1,32 +1,56 @@
 #include <iostream>
 
-#include "../parsing/parsing.h"
-#include "../storage/btree_db_v2.hpp"
-#include "../storage/btree_types.cpp"
-
-void create_db() {
-    traverse_data("../data/dblp.v12.json");
-}
+#include <utility>
+#include "utils.cpp"
+#include "../Dataset/parsing.cpp"
+#include "journalGraph.h"
+#include "tarjansSCC.cpp"
+#include "dijkstrasSP.cpp"
+#define exit_failure 0
+#define exit_success 1
 
 int main() {
-    // create_db();
-    BTreeDB<author::Entry> db("author_keys.db", "author_values.db");
-    // BTreeDB<test::Entry> db("keys.db", "values.db");
+    std::cout << "CS225 Project by Daniel Zhang, Ian Zhang, Kevin Chen, and Jenny Hu" << "\n";
+    std::vector<author_parse_wrapper> p;
+    parse_authors(p, "../data/dblp.v12.json");
+    AuthorGraph g(p);
+    std::vector<std::vector<unsigned long>> scc = g.tarjansSCC();
+    for (auto& i : scc) {
+        std::cout << "Strongly Connected Component | ";
+        for (auto& entry : i) {
+            std::cout << entry << " - ";
+        }
+        std::cout << "\n";
+    }
 
-    // // for (unsigned int i = 0; i < 10000; ++i) {
-    // //     test::Entry temp(i);
-    // //     db.insert(i, temp);
-    // // }
+    std::vector<unsigned long> dsp1 = g.dijkstrasShortestPath(581652684, 1204625948);
+    if (!dsp1.empty()) {
+        std::cout << "dsp1" << std::endl;
 
-    // for (unsigned int i = 0; i < 10000; ++i) {
-    //     std::cout << db.find(i).x << std::endl;;
-    // }
-
-    std::cout << std::string(db.find(2103626414).organization.data()) << std::endl;
-
-
+        for (unsigned long i : dsp1) {
+            std::cout << i << " -> ";
+        }
+        std::cout << std::endl;
+    } else std::cout << "Not connected" << std::endl;
     
     
+    std::vector<unsigned long> dsp2 = g.dijkstrasShortestPath(1303555294, 2019241556);
+    if (!dsp2.empty()) {
+        std::cout << "dsp2" << std::endl;
+        for (unsigned long i : dsp2) {
+            std::cout << i << " -> ";
+        }
+        std::cout << std::endl;
+    } else std::cout << "Not connected" << std::endl;
 
-    return 1;
+    std::vector<unsigned long> dsp3 = g.dijkstrasShortestPath(581652684, 256856704);
+    if (!dsp3.empty()) {
+        std::cout << "dsp3" << std::endl;
+        for (unsigned long i : dsp3) {
+            std::cout << i << " -> ";
+        }
+        std::cout << std::endl;
+    } else std::cout << "Not connected" << std::endl;
+    
+    return exit_success;
 }

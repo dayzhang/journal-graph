@@ -53,6 +53,7 @@
         "utility": "cpp",
         "valarray": "cpp",
         "set": "cpp",
+<<<<<<< HEAD
         "__bit_reference": "cpp",
         "__bits": "cpp",
         "__config": "cpp",
@@ -80,5 +81,23 @@
         "unordered_set": "cpp",
         "variant": "cpp",
         "algorithm": "cpp"
+=======
+        "unordered_set": "cpp",
+<<<<<<< HEAD
+        "variant": "cpp"
+>>>>>>> kevin-develop
     }
+=======
+        "variant": "cpp",
+        "atomic": "cpp",
+        "charconv": "cpp",
+        "condition_variable": "cpp",
+        "list": "cpp",
+        "mutex": "cpp",
+        "semaphore": "cpp",
+        "stop_token": "cpp",
+        "thread": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
+>>>>>>> kevin-develop
 }
