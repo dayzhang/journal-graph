@@ -1,11 +1,11 @@
 #include <iostream>
 
 #include <utility>
-#include "utils.cpp"
-#include "../Dataset/parsing.cpp"
-#include "journalGraph.h"
-#include "tarjansSCC.cpp"
-#include "dijkstrasSP.cpp"
+#include "../graph/utils.cpp"
+#include "../dataset/parsing.cpp"
+#include "../graph/journalGraph.h"
+#include "../graph/tarjansSCC.cpp"
+#include "../graph/dijkstrasSP.cpp"
 #define exit_failure 0
 #define exit_success 1
 

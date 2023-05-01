@@ -1,9 +1,9 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_test_macros.hpp>
-#include "../src/utils.cpp"
-#include "../src/journalGraph.h"
-#include "../src/authorGraph.h"
-#include "../Dataset/parsing.cpp"
+#include "../graph/utils.cpp"
+#include "../graph/journalGraph.h"
+#include "../graph/authorGraph.h"
+#include "../dataset/parsing.cpp"
 
 
 bool verify_graph_properties() {
