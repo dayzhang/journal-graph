@@ -20,6 +20,7 @@ class AuthorGraph {
     };
 
     std::unordered_map<unsigned long, std::vector<weighted_edge>> graph;
+    int num_nodes;
 
 public:
 
@@ -35,4 +36,9 @@ public:
     std::unordered_map<unsigned long, std::vector<weighted_edge>> getGraph();
 
     std::vector<unsigned long> dijkstrasShortestPath(const unsigned long& start, const unsigned long& dest);
+    std::vector<std::vector<unsigned long>> tarjansSCC();
+    std::vector<std::vector<unsigned long>> findSCC(std::unordered_map<unsigned long, int>& id_array, std::unordered_map<unsigned long, int>& low_link, std::unordered_map<unsigned long, bool>& on_stack, std::stack<unsigned long>& scc_stack, int& id);
+    void tarjansSearch(std::vector<std::vector<unsigned long>>& ans, int current_id, std::unordered_map<unsigned long, int>& id_array, std::unordered_map<unsigned long, int>& low_link, std::unordered_map<unsigned long, bool>& on_stack, std::stack<unsigned long>& scc_stack, int& id);
+    //assign lowlink w/ dfs
+
 };
