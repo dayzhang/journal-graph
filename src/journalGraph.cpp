@@ -1,46 +1,35 @@
 #include "journalGraph.h"
 
-bool journalGraph::addEdge(std::string id1, std::string id2) {
-    if (id1.empty() || id2.empty()) {
+void journalGraph::print() {
+    for (auto& pair : graph) {
+        std::cout << "Start Node: " << pair.first << " | " << std::endl;
+        for (unsigned long other : graph.at(pair.first)) {
+            std::cout << other << " ";
+        }
+        std::cout << std::endl;
+    }
+}
+
+bool journalGraph::addEdge(unsigned long id1, unsigned long id2) {
+    if (id1 == 0 || id2 == 0) {
         return false;
     }
-    /*
-    if (name_to_id_.find(id1) == name_to_id_.end()) {
-        name_to_id_[id1] = nodes_;
-        id_to_name_[nodes_] = id1;
-        graph_[nodes]
-        nodes_++;
-    }
-    */
-    if (name_to_id_.find(id2) == name_to_id_.end()) {
-        name_to_id_[id2] = nodes_;
-        id_to_name_[nodes_] = id2;
-        graph_[nodes_] = std::vector<size_t>();
-        nodes_++;
-    }
-    graph_[name_to_id_[id1]].push_back(name_to_id_[id2]);
-    return true;
-} 
-// using the assumption that every journal pointed to by the source is also within node_data
-journalGraph::journalGraph(const std::vector<std::vector<std::string>>& node_data) {
-    //node_data is organized as 1st index = source, subsequent index are its references
-    size_t source_index = 0;
-    nodes_ = node_data.size();
-    size_t i = 0;
-    // Adding all the source nodes to start with
-    for (const auto& entry : node_data) {
-        std::string source = entry.at(source_index);
-        if (source.empty()) continue;
-        name_to_id_[source] = i;
-        id_to_name_[i] = source;
-        i++;
+
+    if (graph.find(id2) == graph.end()) {
+        graph.insert({id2, std::vector<unsigned long>()});
     }
 
+    graph[id1].push_back(id2);
+    return true;
+} 
+
+journalGraph::journalGraph(const std::vector<std::vector<unsigned long>>& node_data) {
+    //node_data is organized as 1st index = source, subsequent index are its references
+    unsigned long source_index = 0;
     for (const auto& entry : node_data) {
-        std::string sourced_id = entry.at(source_index);
-        if (sourced_id.empty()) continue;
-        for (size_t reference_index = 1; reference_index < entry.size(); reference_index++) {
-            if (!addEdge(sourced_id, entry.at(reference_index))) {
+        unsigned long sourced_id = entry[source_index];
+        for (unsigned long reference_index = 1; reference_index < entry.size(); reference_index++) {
+            if (!addEdge(sourced_id, entry[reference_index])) {
                 std::cout << "bad id found at source " << sourced_id << " with ID: " << entry[reference_index];
             }
         }
@@ -48,31 +37,30 @@ journalGraph::journalGraph(const std::vector<std::vector<std::string>>& node_dat
     
 }
 
-
-void journalGraph::dfs(const std::string& vertex, const std::string& pred, std::unordered_map<std::string, int>& seen, std::vector<std::string>& record) { // note that due to the prescence of directed graph + tree structure, cycle should not be possible
-    seen[vertex] = seen[pred] + 1;
-
-    record.push_back(vertex + " Cited by: " + pred);
-
-    for (std::string& adjacent : graph[vertex]) {
-        if (seen.find(adjacent) == seen.end()) {
-            dfs(adjacent, vertex, seen, record);
+struct traversal_element {
+    unsigned long parent;
+    unsigned long child;
+    traversal_element(unsigned long _parent, unsigned long _child) : parent(_parent), child(_child) {};
+};
+void journalGraph::dfs(const unsigned long& vertex, std::unordered_map<unsigned long, bool>& seen, std::vector<std::pair<unsigned long, unsigned long>>& record) { 
+    // not entirely sure what the dfs is supposed to be for, but changed it to iterative so it doesn't exceed recursion limit
+    std::stack<traversal_element> node_stack;
+    node_stack.push({0, vertex});
+    while (!node_stack.empty()) {
+        traversal_element current_node = node_stack.top();
+        node_stack.pop();
+        if (!seen.at(current_node.child)) {
+            seen.at(current_node.child) = true;
+            record.push_back(std::make_pair(current_node.parent, current_node.child));
+        }
+        for (unsigned long other : graph.at(current_node.child)) {
+            if (!seen.at(other)) {
+                node_stack.push({current_node.child, other});
+            }
         }
     }
 }
 
-void journalGraph::dfs_iterative(const std::string& vertex, const std::string& pred, std::unordered_map<std::string, int>& seen, std::vector<std::string>& record) { // note that due to the prescence of directed graph + tree structure, cycle should not be possible
-    seen[vertex] = seen[pred] + 1;
-
-    record.push_back(vertex + " Cited by: " + pred);
-
-    for (std::string& adjacent : graph[vertex]) {
-        if (seen.find(adjacent) == seen.end()) {
-            dfs(adjacent, vertex, seen, record);
-        }
-    }
-}
-*/
 // not entirely sure what the dfs is supposed to be for, but changed it to iterative so it doesn't exceed recursion limit
 void journalGraph::dfs(const size_t& start_node, std::vector<size_t>& record) {
     // std::cout << __LINE__ << std::endl;
@@ -107,16 +95,17 @@ void journalGraph::print() {
     }
 }
 
-std::vector<std::string> journalGraph::getIdeaHistory(const std::string& source) {
-    if (graph_.find(name_to_id_.at(source)) == graph_.end()) {
+std::vector<std::pair<unsigned long, unsigned long>> journalGraph::getIdeaHistory(const unsigned long& source) {
+    if (graph.find(source) == graph.end()) {
         std::cout << "source: " << source << " not found in database.\n";
-        return std::vector<std::string>();
+        return std::vector<std::pair<unsigned long, unsigned long>>();
     }
 
-    std::unordered_map<std::string, int> seen;
-    std::string root("root");
-    seen[root] = -1;
-    std::vector<std::string> record;
-    dfs(source, root, seen, record);
+    std::unordered_map<unsigned long, bool> seen;
+    for (auto& key : graph) {
+        seen[key.first] = false;
+    }
+    std::vector<std::pair<unsigned long, unsigned long>> record;
+    dfs(source, seen, record);
     return record;
 }

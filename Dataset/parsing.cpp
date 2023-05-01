@@ -1,5 +1,6 @@
 #pragma once
 #include "json.hpp"
+#include "../lib/graph_defines.h"
 #include <fstream>
 #include <iostream>
 using namespace std;
@@ -35,8 +36,8 @@ void big_clean(std::string input_file) {
             return false;
         } else if (event == json::parse_event_t::object_end) {
             count++;
-            return true;
         }
+        return true;
     };
     std::ifstream f(input_file);
     auto these = json::parse(f, cb);
@@ -46,7 +47,6 @@ void big_clean(std::string input_file) {
 }
 
 //2DV to take advantage of cache locality
-using author_parse_wrapper = std::pair<std::vector<std::string>, std::vector<std::string>>;
 //organized as source paper (first will have 1 element in first, none in second)
 int parse_authors(std::vector<author_parse_wrapper>& parsed_data, std::string input_file) {
     std::ifstream f(input_file);
@@ -59,25 +59,32 @@ int parse_authors(std::vector<author_parse_wrapper>& parsed_data, std::string in
 
     for (auto json_line : array_of_json) {
 
-        author_parse_wrapper new_line_of_data;
-
-        if (json_line.value("id", "not found") == "not_found") {
-            std::cout << "failed to find paper id, omitting line \n";
+        unsigned long id;
+        try {
+            id = json_line["id"];
+        } catch (exception& e) {
+            std::cout << e.what() << "\n";
             continue;
         }
+        author_parse_wrapper new_line_of_data(id);
 
-        std::vector<std::string>& references = new_line_of_data.first;
-        std::vector<std::string>& authors = new_line_of_data.second;
-        references.push_back(json_line.value("id", "not found"));
+        std::vector<unsigned long>& references = new_line_of_data.cited;
+        std::vector<unsigned long>& authors = new_line_of_data.authors;
 
         for (auto& elem : json_line["references"]) {
             references.push_back(elem);
         } 
 
         for (auto& author : json_line["authors"]) {
-            std::string val = author.value("id", "not found");
-            if (!val.empty()) {
-                authors.push_back(author.value("id", "not found"));
+            long long val;
+            try {
+                val = author["id"];
+            } catch (exception& e) {
+                std::cout << e.what() << "\n";
+                continue;
+            }
+            if (val > 0) {
+                authors.push_back(val);
             } else {
                 std::cout << "Missing Author ID " << "\n";
             }
@@ -93,7 +100,7 @@ int parse_authors(std::vector<author_parse_wrapper>& parsed_data, std::string in
 }
 
 //2DV to take advantage of cache locality
-int parse_references(std::vector<std::vector<std::string>>& parsed_data, std::string input_file) {
+int parse_references(std::vector<std::vector<unsigned long>>& parsed_data, std::string input_file) {
     std::ifstream f(input_file);
     json data = json::parse(f);
     // Access the values existing in JSON data
@@ -103,17 +110,21 @@ int parse_references(std::vector<std::vector<std::string>>& parsed_data, std::st
     //All papers with no references are cleaned out 
 
     for (auto json_line : array_of_json) {
-        std::vector<std::string> new_line_of_data;
+        std::vector<unsigned long> new_line_of_data;
 
-        if (json_line.value("id", "not found") == "not_found") {
-            std::cout << "failed to find paper id, omitting line \n";
+        try {
+            long long id = json_line["id"];
+        } catch (exception& e) {
+            std::cout << e.what() << "\n";
             continue;
         }
-        new_line_of_data.push_back(json_line.value("id", "not found"));
+        unsigned long id = json_line["id"];
+        new_line_of_data.push_back(id);
 
         for (auto& elem : json_line["references"]) {
             new_line_of_data.push_back(elem);
         } 
+
         if (new_line_of_data.size() > 1) {
             parsed_data.push_back(new_line_of_data);
         } else {

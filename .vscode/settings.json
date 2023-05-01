@@ -83,7 +83,21 @@
         "algorithm": "cpp"
 =======
         "unordered_set": "cpp",
+<<<<<<< HEAD
         "variant": "cpp"
 >>>>>>> kevin-develop
     }
+=======
+        "variant": "cpp",
+        "atomic": "cpp",
+        "charconv": "cpp",
+        "condition_variable": "cpp",
+        "list": "cpp",
+        "mutex": "cpp",
+        "semaphore": "cpp",
+        "stop_token": "cpp",
+        "thread": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
+>>>>>>> kevin-develop
 }
