@@ -44,15 +44,6 @@ class BTreeDB {
             A page is a 4096 byte (4096 chars) region of data.
         */
         typedef std::array<char, PAGE_SIZE> Page;
-
-        typedef void (*serialize_func) (T* source, char* dest);
-        typedef void (*deserialize_func) (char* source, T* dest);
-
-        const serialize_func serialize_value;
-        const deserialize_func deserialize_value;
-
-        const unsigned int values_per_page;
-        const unsigned int value_size;
         
         /**
             This struct is how cache blocks are stored. page_num is what page the block is referring to. dirty is whether the block should be written back in case of a cache miss. valid is whether the block is actually filled with valid data. page is the actual data contained within the block.
@@ -66,6 +57,8 @@ class BTreeDB {
                 page.fill(DEFAULT_VAL);
             }
         };
+
+        const unsigned int values_per_page = PAGE_SIZE / T::size;
 
         /**
             A cache set is a pair of cache block with an lru bit.
@@ -135,7 +128,7 @@ class BTreeDB {
             @param key_filename The filename for the key database
             @param values_filename The filename for the value database
         */
-        BTreeDB(const std::string& key_filename, const std::string& values_filename, serialize_func serialize, deserialize_func deserialize, unsigned int value_size);
+        BTreeDB(const std::string& key_filename, const std::string& values_filename);
 
         /**
             Destructor for the BTree database. Iterates through the cache block and writebacks any still-dirty blocks of data to the databases and closes the file handlers.
@@ -148,7 +141,7 @@ class BTreeDB {
             @param key The key
             @param value The value the key is associated with
         */
-        void insert(long key, T& value) ;
+        void insert(long key, T& value);
         /**
             Retrieves a value from the database according to a key.
 
@@ -156,6 +149,8 @@ class BTreeDB {
             @return The ValueEntry the key is associated with, or the default ValueEntry if it was not found.
         */
         T find(long key);
+
+        long get_id_from_name(const T& search_val);
 
     private:
     
@@ -467,7 +462,7 @@ class BTreeDB {
 };
 
 template <typename T>
-BTreeDB<T>::BTreeDB(const std::string& key_filename, const std::string& values_filename, serialize_func serialize, deserialize_func deserialize, unsigned int size): serialize_value(serialize), deserialize_value(deserialize), values_per_page(PAGE_SIZE / size - 1), value_size(size) {
+BTreeDB<T>::BTreeDB(const std::string& key_filename, const std::string& values_filename) {
     std::fstream fs_keys(key_filename, std::ios::binary | std::ios::in | std::ios::out);
     std::fstream fs_values(values_filename, std::ios::binary | std::ios::in | std::ios::out);
     
@@ -866,12 +861,12 @@ T BTreeDB<T>::ValuePageInterface::get_value(unsigned int entry_num) const {
     char* data = tree_->get_page(page_num, Value);
     data += 4; // get past size header
 
-    data += target * tree_->value_size;
+    data += target * T::size;
 
     T res;
     int temp;
     memcpy(&temp, data + 40, 4);
-    tree_->deserialize_value(data, &res);
+    T::deserialize_value(data, &res);
 
     return res;
 }
@@ -889,7 +884,7 @@ void BTreeDB<T>::ValuePageInterface::set_value(T& entry, unsigned int entry_num)
 
     data += target * tree_->value_size;
 
-    tree_->serialize_value(&entry, data);
+    T::serialize_value(&entry, data);
     tree_->set_dirty(page_num, Value);
 }
 
@@ -1135,3 +1130,13 @@ char* BTreeDB<T>::get_page(unsigned int page_num, FileType type) {
 //     memcpy(dest->name.data(), source, 40);
 //     memcpy(&(dest->temp), source + 40, 4);
 // }
+
+template <typename T>
+long BTreeDB<T>::get_id_from_name(const T& search_val) {
+    ValuePageInterface iter(this);
+    for (unsigned int i = 0; i < num_entries; ++i) {
+        if (iter.get_value(i) == search_val) {
+            return iter.get_value(i).id;
+        }
+    }
+}
