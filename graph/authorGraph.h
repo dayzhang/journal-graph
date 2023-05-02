@@ -47,9 +47,6 @@ private:
 
     //Graph Construction
     // bool addEdge(float weight, const unsigned long& id1, const unsigned long& id2); //return false if fails to add
-    void add_same_paper_authors(const std::vector<unsigned long>& authors_in_paper);
-    void add_referenced_authors(const std::vector<unsigned long>& authors_in_paper, const std::vector<unsigned long>& authors_referenced);
-
 public:
 
     AuthorGraph() = default; // subsetting author graphs: Only consider most significant (first) author for each paper
@@ -63,13 +60,15 @@ public:
     void add_same_paper_authors(const std::vector<unsigned long>& authors_in_paper, unsigned int n_citation);
     void add_referenced_authors(const std::vector<unsigned long>& authors_in_paper, const std::array<long, 8>& authors_referenced, unsigned int n_citation_paper, unsigned int n_citation_ref) ;
 
-    void print_graph();
-    std::unordered_map<unsigned long, std::unordered_map<unsigned long, int>>& getGraph() { return adj_list; };
 
     std::vector<unsigned long> dijkstrasShortestPath(const unsigned long& start, const unsigned long& dest);
     std::vector<std::vector<unsigned long>> tarjansSCC();
     std::vector<std::vector<unsigned long>> tarjansSCC_with_query(const unsigned long& query);
-    //assign lowlink w/ dfs
 
     void export_to_file(const std::string& filename);
+
+    //For Testing Only
+    void print_graph();
+    std::unordered_map<unsigned long, std::unordered_map<unsigned long, int>>& getGraph() { return adj_list; };
+    AuthorGraph(const std::vector<author_parse_wrapper>& node_data);
 };

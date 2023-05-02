@@ -19,7 +19,7 @@ add_executable(main ${CMAKE_SOURCE_DIR}/src/main.cpp ${CMAKE_SOURCE_DIR}/lib/sim
 add_executable(parse ${CMAKE_SOURCE_DIR}/src/parse.cpp ${CMAKE_SOURCE_DIR}/lib/simdjson.cpp ${CMAKE_SOURCE_DIR}/parsing/parsing.cpp ${CMAKE_SOURCE_DIR}/graph/journalGraph.cpp
 ${CMAKE_SOURCE_DIR}/graph/authorGraph.cpp)
 
-add_executable(run_tests ${CMAKE_SOURCE_DIR}/catch_tests/tests.cpp)
+add_executable(run_tests ${CMAKE_SOURCE_DIR}/catch_tests/tests.cpp ${CMAKE_SOURCE_DIR}/graph/authorGraph.cpp ${CMAKE_SOURCE_DIR}/graph/journalGraph.cpp)
 
 target_link_libraries(run_tests Catch2::Catch2WithMain)
 

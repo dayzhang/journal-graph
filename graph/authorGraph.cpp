@@ -87,8 +87,6 @@ void AuthorGraph::add_same_paper_authors(const std::vector<unsigned long>& autho
 }
 
 void AuthorGraph::add_referenced_authors(const std::vector<unsigned long>& authors_in_paper, const std::array<long, 8>& authors_referenced, unsigned int n_citation_paper, unsigned int n_citation_ref) {
-    //Typically, authors are listed in decreasing contribution with the last as the supervisor.
-    //Effectively constant time, max 9 operations
     for (unsigned int i = 0; i < authors_in_paper.size() && i < AUTHOR_EDGE_LIMIT; ++i) {
         for (unsigned int j = 0; j < AUTHOR_EDGE_LIMIT; ++j) {
             if (authors_referenced[j] == 0) {
@@ -111,3 +109,26 @@ void AuthorGraph::print_graph() {
         std::cout << "\n";
     }
 }
+
+//For unit testing: Dont use on full dataset
+AuthorGraph::AuthorGraph(const std::vector<author_parse_wrapper>& node_data) {
+    std::unordered_map<unsigned long, std::vector<unsigned long>> static_author_mapping;
+
+    for (size_t paper = 0; paper < node_data.size(); paper++) {
+        const unsigned long& root = node_data[paper].source;
+        static_author_mapping[root] = node_data[paper].authors;
+    }
+
+    for (const author_parse_wrapper& paper : node_data) {
+        add_same_paper_authors(paper.authors, 1);
+        for (const unsigned long& reference : paper.cited) {
+            std::array<long, 8> arr;
+            const std::vector<unsigned long>& to_add = static_author_mapping[reference];
+            std::copy_n(to_add.begin(), to_add.size(), arr.begin());
+
+            add_referenced_authors(to_add, arr, 1, 1);
+        }
+    }
+
+    num_nodes = adj_list.size();
+}   

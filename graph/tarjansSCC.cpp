@@ -85,6 +85,7 @@ std::vector<std::vector<unsigned long>> AuthorGraph::tarjansSCC_with_query(const
     if (adj_list.find(query) == adj_list.end()) {
         std::cout << "did not find " << query << " in database\n";
     }
+    
     int id = 0;
 
     std::unordered_map<unsigned long, tarjans_t> tarjans_data;
