@@ -99,36 +99,15 @@ void AuthorGraph::add_referenced_authors(const std::vector<unsigned long>& autho
     }
 }
 
-
-// AuthorGraph::AuthorGraph(const std::vector<author_parse_wrapper>& node_data) {
-//     //if authors in same paper, set weight to 1/5. Otherwise, if related by citation, let weight be 5
-//     //maps node to authors by index
-//     std::unordered_map<unsigned long, std::vector<unsigned long>> static_author_mapping;
-
-//     for (size_t paper = 0; paper < node_data.size(); paper++) {
-//         const unsigned long& root = node_data[paper].source;
-//         static_author_mapping[root] = node_data[paper].authors;
-//     }
-
-//     for (const author_parse_wrapper& paper : node_data) {
-//         add_same_paper_authors(paper.authors);
-//         for (const unsigned long& reference : paper.cited) {
-//             add_referenced_authors(paper.authors, static_author_mapping[reference]);
-//         }
-//     }
-
-//     num_nodes = graph.size();
-// }   
-
-// void AuthorGraph::print_graph() {
-//     for (auto& entry : graph) {
-//         std::cout << entry.first << " | ";
-//         for (auto& ele : entry.second) {
-//             std::cout << ele.destination << " " << ele.weight << "\t";
-//             if (ele.weight == 5) {
-//                 std::cout << "!!!!";
-//             }
-//         }
-//         std::cout << "\n";
-//     }
-// }
+void AuthorGraph::print_graph() {
+    for (auto& entry : adj_list) {
+        std::cout << entry.first << " | ";
+        for (auto& ele : entry.second) {
+            std::cout << ele.first << " " << ele.second << "\t";
+            if (ele.second == 5) {
+                std::cout << "!!!!";
+            }
+        }
+        std::cout << "\n";
+    }
+}

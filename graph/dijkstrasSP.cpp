@@ -5,17 +5,14 @@ std::vector<unsigned long> AuthorGraph::dijkstrasShortestPath(const unsigned lon
     
     if (adj_list.find(start) == adj_list.end() || adj_list.find(dest) == adj_list.end()) return std::vector<unsigned long>();
     
-    struct CompareWeight {
-        bool operator()(std::pair<unsigned long, unsigned long> const& p1, std::pair<unsigned long, unsigned long> const& p2)
-        {
-            // return "true" if "p1" is ordered
-            // before "p2", for example:
-            return static_cast<double>(1 / adj_list[p1.first][p1.second]) > static_cast<double>(1 / adj_list[p2.first][p2.second])
-        }
+    auto CompareWeight = [this](std::pair<unsigned long, unsigned long> const& p1, std::pair<unsigned long, unsigned long> const& p2) -> bool {
+        return static_cast<double>(1 / this -> adj_list[p1.first][p1.second]) > static_cast<double>(1 / this -> adj_list[p2.first][p2.second]);
     };
+    
     std::priority_queue<std::pair<unsigned long, unsigned long>, 
                         std::vector<std::pair<unsigned long, unsigned long>>, 
-                        CompareWeight> queue;
+                        decltype(CompareWeight)> queue(CompareWeight);
+                        
     // std::set<unsigned long> visited;
     std::unordered_map<unsigned long, unsigned long> previous;
     // distance_map[start] = 0;

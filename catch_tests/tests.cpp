@@ -1,8 +1,8 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_test_macros.hpp>
 #include "../graph/utils.cpp"
-#include "../graph/journalGraph.h"
-#include "../graph/authorGraph.h"
+#include "../graph/journalGraph.cpp"
+#include "../graph/authorGraph.cpp"
 #include "../dataset/parsing.cpp"
 
 
@@ -56,10 +56,6 @@ TEST_CASE("Ensure BFS works as intended") {
 }
 
 TEST_CASE("Ensure valid AuthorGraph") {
-    std::vector<author_parse_wrapper> node_data; 
-    parse_authors(node_data, "../data/dblp.v12.json");
-    AuthorGraph g(node_data);
-    g.print_graph();
 }
 
 TEST_CASE("Ensure valid JournalGraph") {

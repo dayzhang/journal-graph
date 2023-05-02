@@ -17,7 +17,7 @@ bool print_parsed_references() {
 
     for (auto& entry : parsed_info) {
         std::cout << "Paper ID: " << entry[0] << " with references:\n";
-        for (int paper_num = 1; paper_num < entry.size(); paper_num++) {
+        for (unsigned long paper_num = 1; paper_num < entry.size(); paper_num++) {
             std::cout << entry[paper_num] << " ";
         }
 
@@ -36,11 +36,11 @@ bool print_parsed_authors() {
 
     for (auto& entry : parsed_info) {
         std::cout << "Paper ID: " << entry.source << "with references and authors:\n";
-        for (int i = 0; i < entry.cited.size(); i++) {
+        for (unsigned long i = 0; i < entry.cited.size(); i++) {
             std::cout << entry.cited[i] << " | ";
         }
         std::cout << "authors --------- ";
-        for (int i = 0; i < entry.authors.size(); i++) {
+        for (unsigned long i = 0; i < entry.authors.size(); i++) {
             std::cout << entry.authors[i] << " ";
         }
 
@@ -59,7 +59,7 @@ bool run_dfs() {
         return exit_failure;
     }
 
-    journalGraph g(parsed_info);
+    journalGraph g(std::string("../data/dblp.v12.json"));
 
     std::vector<std::pair<unsigned long, unsigned long>> answer = g.getIdeaHistory(86197);
 

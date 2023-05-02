@@ -46,7 +46,7 @@ struct traversal_element {
     unsigned int child;
     traversal_element(unsigned int _parent, unsigned int _child) : parent(_parent), child(_child) {};
 };
-void journalGraph::dfs(const unsigned int& vertex, std::unordered_map<unsigned int, bool>& seen, std::vector<std::pair<unsigned int, unsigned int>>& record) { 
+void journalGraph::dfs(const unsigned int& vertex, std::unordered_map<unsigned long, bool>& seen, std::vector<std::pair<unsigned long, unsigned long>>& record) { 
     // not entirely sure what the dfs is supposed to be for, but changed it to iterative so it doesn't exceed recursion limit
     std::stack<traversal_element> node_stack;
     node_stack.push({0, vertex});
@@ -93,17 +93,17 @@ void journalGraph::dfs(const unsigned int& start_node, std::vector<size_t>& reco
 */
 
 
-std::vector<std::pair<unsigned int, unsigned int>> journalGraph::getIdeaHistory(const unsigned int& source) {
+std::vector<std::pair<unsigned long, unsigned long>> journalGraph::getIdeaHistory(const unsigned int& source) {
     if (graph.find(source) == graph.end()) {
         std::cout << "source: " << source << " not found in database.\n";
-        return std::vector<std::pair<unsigned int, unsigned int>>();
+        return std::vector<std::pair<unsigned long, unsigned long>>();
     }
 
-    std::unordered_map<unsigned int, bool> seen;
+    std::unordered_map<unsigned long, bool> seen;
     for (auto& key : graph) {
         seen[key.first] = false;
     }
-    std::vector<std::pair<unsigned int, unsigned int>> record;
+    std::vector<std::pair<unsigned long, unsigned long>> record;
     dfs(source, seen, record);
     return record;
 }

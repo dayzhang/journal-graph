@@ -20,7 +20,7 @@ std::vector<std::vector<unsigned long>> AuthorGraph::tarjansSCC() {
 
     std::unordered_map<unsigned long, tarjans_t> tarjans_data;
 
-    for (auto& ids : graph) {
+    for (auto& ids : adj_list) {
         tarjans_data[ids.first] = tarjans_t();
     }
 
@@ -32,7 +32,7 @@ std::vector<std::vector<unsigned long>> AuthorGraph::findSCC(std::unordered_map<
 
     std::vector<std::vector<unsigned long>> all_SCCs;
 
-    for (auto& ids : graph) {
+    for (auto& ids : adj_list) {
         if (tarjans_data[ids.first].disc == unvisited) {
             tarjansSearch(all_SCCs, ids.first, tarjans_data, scc_stack, id);
         }
@@ -51,8 +51,8 @@ void AuthorGraph::tarjansSearch(std::vector<std::vector<unsigned long>>& ans, co
     _on_stack = true;
     _disc = _low_link = id++;
     
-    for (weighted_edge& edge : graph[current_id]) {
-        auto& adj = edge.destination;
+    for (std::pair<const unsigned long, int>& edge : adj_list[current_id]) {
+        auto& adj = edge.first;
         if (tarjans_data[adj].disc == unvisited) {
             tarjansSearch(ans, adj, tarjans_data, scc_stack, id);
             _low_link = std::min(_low_link, tarjans_data[adj].low_link);
@@ -71,13 +71,33 @@ void AuthorGraph::tarjansSearch(std::vector<std::vector<unsigned long>>& ans, co
             tarjans_data[node].on_stack = false;
             scc_stack.pop();
         }
-        std::cout << current_id << "\n";
         strongly_connected.push_back(current_id);
         _on_stack = false;
         scc_stack.pop();
-
-        if (strongly_connected.size() > 1) { //dont really care about single node SCC
+        if (strongly_connected.size() > 1) {
             ans.push_back(strongly_connected);
         }
     }
+}
+
+std::vector<std::vector<unsigned long>> AuthorGraph::tarjansSCC_with_query(const unsigned long& query) {
+
+    if (adj_list.find(query) == adj_list.end()) {
+        std::cout << "did not find " << query << " in database\n";
+    }
+    int id = 0;
+
+    std::unordered_map<unsigned long, tarjans_t> tarjans_data;
+
+    for (auto& ids : adj_list) {
+        tarjans_data[ids.first] = tarjans_t();
+    }
+
+    std::stack<unsigned long> scc_stack;
+
+    std::vector<std::vector<unsigned long>> all_SCCs;
+
+    tarjansSearch(all_SCCs, query, tarjans_data, scc_stack, id);
+
+    return all_SCCs;
 }

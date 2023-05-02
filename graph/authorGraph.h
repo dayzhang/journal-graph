@@ -27,9 +27,10 @@ class AuthorGraph {
 
     std::unordered_map<unsigned long, std::unordered_map<unsigned long, int>> adj_list;
 
-    int num_nodes;
+    unsigned long num_nodes;
 
 private:
+
     //Tarjan's Algorithm 
     struct tarjans_t {
         int disc;
@@ -62,13 +63,12 @@ public:
     void add_same_paper_authors(const std::vector<unsigned long>& authors_in_paper, unsigned int n_citation);
     void add_referenced_authors(const std::vector<unsigned long>& authors_in_paper, const std::array<long, 8>& authors_referenced, unsigned int n_citation_paper, unsigned int n_citation_ref) ;
 
-    // void print_graph();
-    // std::unordered_map<unsigned long, std::unordered_map<unsigned long, int>>& getGraph() { return adj_list; };
+    void print_graph();
+    std::unordered_map<unsigned long, std::unordered_map<unsigned long, int>>& getGraph() { return adj_list; };
 
     std::vector<unsigned long> dijkstrasShortestPath(const unsigned long& start, const unsigned long& dest);
     std::vector<std::vector<unsigned long>> tarjansSCC();
-    std::vector<std::vector<unsigned long>> findSCC(std::unordered_map<unsigned long, int>& id_array, std::unordered_map<unsigned long, int>& low_link, std::unordered_map<unsigned long, bool>& on_stack, std::stack<unsigned long>& scc_stack, int& id);
-    void tarjansSearch(std::vector<std::vector<unsigned long>>& ans, int current_id, std::unordered_map<unsigned long, int>& id_array, std::unordered_map<unsigned long, int>& low_link, std::unordered_map<unsigned long, bool>& on_stack, std::stack<unsigned long>& scc_stack, int& id);
+    std::vector<std::vector<unsigned long>> tarjansSCC_with_query(const unsigned long& query);
     //assign lowlink w/ dfs
 
     void export_to_file(const std::string& filename);

@@ -24,8 +24,8 @@ public:
     ~journalGraph() = default;
     bool addEdge(unsigned int id1, unsigned int id2); //return false if fails to add
 
-    std::vector<std::pair<unsigned int, unsigned int>> getIdeaHistory(const unsigned int& source);
-    void dfs(const unsigned int& vertex, std::unordered_map<unsigned int, bool>& seen, std::vector<std::pair<unsigned int, unsigned int>>& record);
+    std::vector<std::pair<unsigned long, unsigned long>> getIdeaHistory(const unsigned int& source);
+    void dfs(const unsigned int& vertex, std::unordered_map<unsigned long, bool>& seen, std::vector<std::pair<unsigned long, unsigned long>>& record);
 
     void print();
 
