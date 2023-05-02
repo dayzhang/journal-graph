@@ -37,10 +37,22 @@ bool verify_valid_parsed_data(std::vector<std::vector<std::string>>& parsed_refe
     //ensure no whitespace
 }
 
-TEST_CASE("Ensure Parser Works as Intended") {
+TEST_CASE("Ensure References Parser Works as Intended") {
     // Test code goes here
     std::vector<std::vector<unsigned long>> parsed_references;
     REQUIRE(parse_references(parsed_references, "../data/dblp.v12.json"));
+}
+
+TEST_CASE("Ensure Author Parser works as intended") {
+
+}
+
+TEST_CASE("Ensure DFS works as intended") {
+
+}
+
+TEST_CASE("Ensure BFS works as intended") {
+
 }
 
 TEST_CASE("Ensure valid AuthorGraph") {
@@ -48,4 +60,32 @@ TEST_CASE("Ensure valid AuthorGraph") {
     parse_authors(node_data, "../data/dblp.v12.json");
     AuthorGraph g(node_data);
     g.print_graph();
+}
+
+TEST_CASE("Ensure valid JournalGraph") {
+
+}
+
+TEST_CASE("Dijkstra's Test 1") {
+
+}
+
+TEST_CASE("Dijkstra's Test 2") {
+
+}
+
+TEST_CASE("Database Stores All Queries") {
+
+}
+
+TEST_CASE("Database successfully access all queries") {
+
+}
+
+TEST_CASE("TarjansTest 1") {
+
+}
+
+TEST_CASE("TarjansTest 2") {
+
 }

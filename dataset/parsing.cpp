@@ -90,7 +90,7 @@ int parse_authors(std::vector<author_parse_wrapper>& parsed_data, std::string in
             }
         }
 
-        if (references.size() > 1 && authors.size() > 0) {
+        if (authors.size() > 0) {
             parsed_data.push_back(new_line_of_data);
         } else {
             std::cout << "No authors or references found for this paper, ommiting line.\n";
