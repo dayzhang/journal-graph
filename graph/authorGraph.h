@@ -13,6 +13,7 @@
 #define same_paper_weight 10
 #define ref_author_weight_ref 1
 #define ref_author_weight_orig 2
+#define DIJKSTRA_INIT 100000000;
 
 class AuthorGraph {
 
