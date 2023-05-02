@@ -41,6 +41,7 @@ private:
 public:
 
     AuthorGraph(); // subsetting author graphs: Only consider most significant (first) author for each paper
+    AuthorGraph(bool minimized);
     AuthorGraph(const std::vector<author_parse_wrapper>& node_data);
     AuthorGraph(AuthorGraph& other_graph);
     ~AuthorGraph() = default;
@@ -53,6 +54,8 @@ public:
 
     std::vector<unsigned long> dijkstrasShortestPath(const unsigned long& start, const unsigned long& dest);
     std::vector<std::vector<unsigned long>> tarjansSCC();
+    std::vector<std::vector<unsigned long>> tarjansSCC_with_query(const unsigned long& query);
+
     //assign lowlink w/ dfs
 
 };

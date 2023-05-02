@@ -36,7 +36,6 @@ std::vector<std::vector<unsigned long>> AuthorGraph::findSCC(std::unordered_map<
 
     for (auto& ids : graph) {
         if (tarjans_data[ids.first].disc == unvisited) {
-            std::cout << ids.first << "\n";
             tarjansSearch(all_SCCs, ids.first, tarjans_data, scc_stack, id);
         }
     }
@@ -83,4 +82,22 @@ void AuthorGraph::tarjansSearch(std::vector<std::vector<unsigned long>>& ans, co
             ans.push_back(strongly_connected);
         }
     }
+}
+
+std::vector<std::vector<unsigned long>> AuthorGraph::tarjansSCC_with_query(const unsigned long& query) {
+    int id = 0;
+
+    std::unordered_map<unsigned long, tarjans_t> tarjans_data;
+
+    for (auto& ids : graph) {
+        tarjans_data[ids.first] = tarjans_t();
+    }
+
+    std::stack<unsigned long> scc_stack;
+
+    std::vector<std::vector<unsigned long>> all_SCCs;
+
+    tarjansSearch(all_SCCs, query, tarjans_data, scc_stack, id);
+
+    return all_SCCs;
 }
