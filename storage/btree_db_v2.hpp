@@ -21,24 +21,15 @@
 
 #define KEYENTRY_SIZE 12
 #define HEADER_SIZE 16
-// #define ENTRY_SIZE 44
 
 #define DEFAULT_VAL 0
 
-// const unsigned int ENTRIES_PER_PAGE = PAGE_SIZE / ENTRY_SIZE - 1;
 
 enum FileType {
     Key,
     Value
 };
 
-/**
-    This struct details how values are stored in the values database.
-*/
-// struct ValueEntry {
-//     std::array<char, 40> name;
-//     int temp;
-// };
 
 template <typename T>
 class BTreeDB {
@@ -116,6 +107,8 @@ class BTreeDB {
         */
         char empty_array[PAGE_SIZE];
 
+        bool read_only;
+
     public:
         /**
             Constructor for the BTree database. Either creates a new database if the filename doesn't refer to anything or instantitates a previously created database if the filenames do refer to something. The key and value databases should be compatible with each other.
@@ -123,7 +116,7 @@ class BTreeDB {
             @param key_filename The filename for the key database
             @param values_filename The filename for the value database
         */
-        BTreeDB(const std::string& key_filename, const std::string& values_filename, bool create_new=false);
+        BTreeDB(const std::string& key_filename, const std::string& values_filename, bool create_new=false, bool read_only_opt=false);
 
         /**
             Destructor for the BTree database. Iterates through the cache block and writebacks any still-dirty blocks of data to the databases and closes the file handlers.
@@ -218,19 +211,6 @@ class BTreeDB {
                 */
                 void set_child_ptr(unsigned int target, unsigned int entry_num);
 
-                // /**
-                //     Returns the parent pointer of the current page. 
-
-                //     @return parent pointer (bucket number) of parent; UINT_MAX if null
-                // */
-                // unsigned int get_parent_ptr() const;
-                // /**
-                //     Sets the parent pointer of the current page to a given value.
-
-                //     @param x The parent pointer (page number) to set
-                // */
-                // void set_parent_ptr(unsigned int x);
-
                 /**
                     Returns the nth key of the current page.
 
@@ -244,19 +224,6 @@ class BTreeDB {
                     @return the page number this interface refers to; UINT_MAX if null
                 */
                 unsigned int get_page_num() const;
-
-                // /**
-                //     Returns the next pointer of this page
-
-                //     @return next pointer (page number), UINT_MAX if null
-                // */
-                // unsigned int get_next_ptr() const;
-                // /**
-                //     Set the next pointer of this page
-
-                //     @param ptr pointer (page number) to set this page's next pointer to
-                // */
-                // void set_next_ptr(unsigned int ptr);
 
                 /**
                     Pushes a new key/child_ptr key pair in sorted order.
@@ -381,7 +348,7 @@ class BTreeDB {
 
             @return A keypage interface for the newly created keypage
         */
-        KeyPageInterface create_new_keypage(unsigned int num_cells, bool internal, bool is_root, unsigned int parent_ptr = UINT_MAX, unsigned int next_ptr = UINT_MAX);
+        KeyPageInterface create_new_keypage(unsigned int num_cells, bool internal, bool is_root);
 
         void write_all();
 
@@ -393,13 +360,6 @@ class BTreeDB {
         */
         void set_dirty(unsigned int page_num, FileType type);
 
-        // /**
-        //     Helper function for mapping page numbers to cache entries. Is currently a naive modulus
-
-        //     @param page_num The page to get a mapping to cache for
-        // */
-        // unsigned int get_page_idx(unsigned int page_num) const;
-
         /**
             Helper function to write a page_num to the file database.
 
@@ -409,15 +369,6 @@ class BTreeDB {
         void write_page(unsigned int page_num, FileType type);
 
         /**
-            Helper function to get the cache block associated with page_num. There is no guarantee the returned block is in-sync with the page_num, just gets the cache block that the page would map to.
-
-            @param page_num the page number to get the associated cache block for
-            @param type whether to read from the key or value caches
-            @return a reference to the cacheblock the page num is associated with
-        */
-        // std::pair<std::array<BTreeDB::CacheBlock, 2>, bool>& get_cache_set(unsigned int page_num, FileType type);
-
-        /**
             Gets the actual data of a given page number. Handles cache misses and cache hits implicitly.
 
             @param page_num The page being requested
@@ -425,39 +376,10 @@ class BTreeDB {
             @return the character array representing the page's binary data
         */
         char* get_page(unsigned int page_num, FileType type);
-
-        /**
-            Helper function to convert a valueentry to its binary character array representation.
-
-            @param source Valueentry to convert to binary
-            @param dest The character pointer to write the binary data to
-        // */
-        // void serialize_value(const T* const source, char* dest) const;
-        // /**
-        //     Helper function to convert binary data to a human readable ValueEntry
-
-        //     @param source The source pointer to read binary data from
-        //     @param dest The ValueEntry pointer to write to
-        // */
-        // void deserialize_value(const char* const source, ValueEntry* dest) const;
-
-        // void serialize_header(Header* source, char* dest) {
-        //     memcpy(dest, &(source->num_cells), 4);
-        //     memcpy(dest + 4, &(source->node_type), 1);
-        //     memcpy(dest + 5, &(source->is_root), 1);
-        //     memcpy(dest + 8, &(source->parent_ptr), 4);
-        // }
-
-        // void deserialize_header(char* source, Header* dest) {
-        //     memcpy(&(dest->num_cells), source, 4);
-        //     memcpy(&(dest->node_type), source + 4, 1);
-        //     memcpy(&(dest->is_root), source + 5, 1);
-        //     memcpy(&(dest->parent_ptr), source + 8, 4);
-        // }
 };
 
 template <typename T>
-BTreeDB<T>::BTreeDB(const std::string& key_filename, const std::string& values_filename, bool create_new) {
+BTreeDB<T>::BTreeDB(const std::string& key_filename, const std::string& values_filename, bool create_new, bool read_only_opt): read_only(read_only_opt) {
     std::fstream fs_keys;
     std::fstream fs_values;
     std::fstream fs_meta;
@@ -468,18 +390,6 @@ BTreeDB<T>::BTreeDB(const std::string& key_filename, const std::string& values_f
         fs_keys.open(key_filename, std::ios::binary | std::ios::in | std::ios::out | std::ios::trunc);
         fs_values.open(values_filename, std::ios::binary | std::ios::in | std::ios::out | std::ios::trunc);
         fs_meta.open(metadata_file, std::ios::binary | std::ios::in | std::ios::out | std::ios::trunc);
-
-        // uint64_t size = 2 * 1000 *1000 * 1000;
-        // std::vector<char> data;
-        // data.reserve(size);
-
-        // for (int i = 0; i < size; ++i)
-        // {
-        //     data.push_back('a');
-        // }
-
-        // fs_values.write(data.data(), size);
-        // num_value_pages = 262144;
 
         num_entries = num_key_pages = key_root = num_value_pages = 0;
     } else {
@@ -509,9 +419,10 @@ BTreeDB<T>::BTreeDB(const std::string& key_filename, const std::string& values_f
         fs_meta >> num_key_pages;
         fs_meta >> key_root;
     }
-
-    fs_meta.close();
-    fs_meta.open(metadata_file, std::ios::out | std::ios::trunc);
+    if (!read_only) {
+        fs_meta.close();
+        fs_meta.open(metadata_file, std::ios::out | std::ios::trunc);
+    }
 
     std::cout << num_entries << ' ' << num_value_pages << ' ' << num_key_pages << ' ' << key_root << std::endl;
 
@@ -522,6 +433,7 @@ BTreeDB<T>::BTreeDB(const std::string& key_filename, const std::string& values_f
 }
 template <typename T>
 void BTreeDB<T>::write_all() {
+    if (read_only) return;
     for (const auto& entry : key_cache) {
         if (entry.second.data != nullptr && entry.second.dirty) {
             write_page(entry.first, Key);
@@ -558,6 +470,7 @@ BTreeDB<T>::~BTreeDB() {
 
 template <typename T>
 void BTreeDB<T>::insert(long key, T& value) {
+    if (read_only) return;
     if (num_key_pages == 0) {
         KeyPageInterface key_iter = create_new_keypage(0, false, true);
         ValuePageInterface value_iter(this);
@@ -676,17 +589,6 @@ void BTreeDB<T>::KeyPageInterface::set_root(bool x) {
     handle_set();
 }
 
-// unsigned int BTreeDB::KeyPageInterface::get_parent_ptr() const {
-//     unsigned int res;
-//     memcpy(&res, get_data() + 8, 4);
-//     return res;
-// }
-
-// void BTreeDB::KeyPageInterface::set_parent_ptr(unsigned int x) {
-//     memcpy(get_data() + 8, &x, 4);
-//     handle_set();
-// }
-
 template <typename T>
 long BTreeDB<T>::KeyPageInterface::get_key(unsigned int entry_num) const {
     if (entry_num >= get_size()) {
@@ -780,21 +682,9 @@ void BTreeDB<T>::KeyPageInterface::set_child_ptr(unsigned int target, unsigned i
         curr += 8;
     }
 
-    unsigned int res;
     memcpy(curr, &target, 4);
     handle_set();
 }
-
-// unsigned int BTreeDB::KeyPageInterface::get_next_ptr() const {
-//     unsigned int res;
-//     memcpy(&res, get_data() + 12, 4);
-//     return res;
-// }
-
-// void BTreeDB::KeyPageInterface::set_next_ptr(unsigned int ptr) {
-//     memcpy(get_data() + 12, &ptr, 4);
-//     handle_set();
-// }
 
 template <typename T>
 void BTreeDB<T>::KeyPageInterface::move_keys(KeyPageInterface& other) {
@@ -888,10 +778,12 @@ unsigned int BTreeDB<T>::ValuePageInterface::push(T& entry) {
     tree_->num_entries += 1;
 
     if (tree_->num_value_pages == 0 || get_size(tree_->num_value_pages - 1) == tree_->values_per_page) {
-        tree_->num_value_pages += 1;
         std::array<char, PAGE_SIZE> new_value_page;
         new_value_page.fill(DEFAULT_VAL);
-        tree_->value_handler.write(new_value_page.data(), PAGE_SIZE);
+        tree_->value_cache[tree_->num_value_pages].data = new char[PAGE_SIZE];
+        memcpy(tree_->value_cache[tree_->num_value_pages].data, new_value_page.data(), PAGE_SIZE);
+        // tree_->value_handler.write(new_value_page.data(), PAGE_SIZE);
+        tree_->num_value_pages += 1;
     } 
     
     set_size(get_size(tree_->num_value_pages - 1) + 1, tree_->num_value_pages - 1);
@@ -954,7 +846,7 @@ void BTreeDB<T>::KeyPageInterface::split_page(KeyPageInterface& parent) {
 }
 
 template <typename T>
-typename BTreeDB<T>::KeyPageInterface BTreeDB<T>::create_new_keypage(unsigned int num_cells, bool internal, bool is_root, unsigned int parent_ptr, unsigned int next_ptr) {
+typename BTreeDB<T>::KeyPageInterface BTreeDB<T>::create_new_keypage(unsigned int num_cells, bool internal, bool is_root) {
     std::array<char, PAGE_SIZE> new_page;
     new_page.fill(DEFAULT_VAL);
 
@@ -965,8 +857,11 @@ typename BTreeDB<T>::KeyPageInterface BTreeDB<T>::create_new_keypage(unsigned in
 
     key_handler.seekg(0, std::ios::end);
     key_handler.write(new_page.data(), PAGE_SIZE);
+    key_cache[num_key_pages].data = new char[PAGE_SIZE];
+    memcpy(key_cache[num_key_pages].data, new_page.data(), PAGE_SIZE);
+
     ++num_key_pages;
-    get_page(num_key_pages - 1, Key);
+    // get_page(num_key_pages - 1, Key);
 
     KeyPageInterface curr(num_key_pages - 1, this);
     curr.set_size(num_cells);
@@ -1023,11 +918,6 @@ void BTreeDB<T>::set_dirty(unsigned int page_num, FileType type) {
     }
 }
 
-// template <typename T>
-// unsigned int BTreeDB<T>::get_page_idx(unsigned int page_num) const {
-//     return h(page_num) % CACHE_SIZE;
-// }
-
 template <typename T>
 void BTreeDB<T>::write_page(unsigned int page_num, FileType type) {
     switch (type) {
@@ -1046,34 +936,9 @@ void BTreeDB<T>::write_page(unsigned int page_num, FileType type) {
     }
 }
 
-// template <typename T>
-// typename BTreeDB<T>::CacheSet& BTreeDB<T>::get_cache_set(unsigned int page_num, FileType type) {
-//     switch(type) {
-//         case Key: {
-//             if (page_num >= num_key_pages) {
-//                 write_all();
-//                 throw std::runtime_error("requested key page out of bounds");
-//             }
-//             return key_cache[get_page_idx(page_num)];
-//         }
-//         case Value: {
-//             if (page_num >= num_value_pages) {
-//                 write_all();
-//                 throw std::runtime_error("requested value page out of bounds");
-//             }
-//             return value_cache[get_page_idx(page_num)];
-//         }
-//         default: {
-//             write_all();
-//             throw std::runtime_error("invalid filetype");
-//         }
-//     }
-// }
-
 template <typename T>
 char* BTreeDB<T>::get_page(unsigned int page_num, FileType type) {
     // get the cache set this page maps to
-    char* data = nullptr;
     switch(type) {
         case Key: {
             if (key_cache.find(page_num) != key_cache.end()) {
@@ -1101,16 +966,6 @@ char* BTreeDB<T>::get_page(unsigned int page_num, FileType type) {
     throw std::runtime_error("something went wrong");
 }
 
-// void BTreeDB::serialize_value(const ValueEntry* const source, char* dest) const {
-//     memcpy(dest, source->name.data(), 40);
-//     memcpy(dest + 40, &(source->temp), 4);
-// }
-
-// void BTreeDB::deserialize_value(const char* const source, ValueEntry* dest) const {
-//     memcpy(dest->name.data(), source, 40);
-//     memcpy(&(dest->temp), source + 40, 4);
-// }
-
 template <typename T>
 long BTreeDB<T>::get_id_from_name(const T& search_val) {
     ValuePageInterface iter(this);
@@ -1119,4 +974,5 @@ long BTreeDB<T>::get_id_from_name(const T& search_val) {
             return iter.get_value(i).id;
         }
     }
+    return -1;
 }

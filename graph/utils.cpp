@@ -3,8 +3,8 @@
 #include <utility>
 #include <vector>
 #include "../dataset/parsing.cpp"
-#include "journalGraph.cpp"
-#include "authorGraph.cpp"
+#include "journalGraph.h"
+#include "authorGraph.h"
 #define exit_failure 0
 #define exit_success 1
 

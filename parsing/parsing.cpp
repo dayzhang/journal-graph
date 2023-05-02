@@ -12,6 +12,7 @@
 #include "../storage/btree_db_v2.hpp"
 #include "../storage/btree_types.cpp"
 #include "../graph/journalGraph.h"
+#include "../graph/authorGraph.h"
 
 using namespace simdjson;
 
@@ -37,12 +38,10 @@ void build_db(const std::string &filename) {
 
     while(std::getline(ifs, line)) {
         // std::cout << i << std::endl;
-        if (i % 10000 == 0) {
+        if (i % 100000 == 0) {
             std::cout << i << std::endl;
         }
-        // if (i == 200000) {
-        //     break;
-        // }
+
         if (line.at(0) == ',') {
             line = line.substr(1);
         }
@@ -61,7 +60,8 @@ void build_db(const std::string &filename) {
             continue;
         }
 
-        std::vector<long> author_vec(8);
+        std::array<long, 8> author_vec;
+        author_vec.fill(0);
 
         ondemand::array authors;
         auto author_error = curr.find_field("authors").get(authors);
@@ -96,7 +96,7 @@ void build_db(const std::string &filename) {
 
             traversed.insert(id);
 
-            author_vec.push_back(id);
+            author_vec[j] = id;
 
             ++j;
         }
@@ -135,7 +135,7 @@ void build_db(const std::string &filename) {
 
         } else {
             for (long id : refs) {
-                g.addEdge(id, paper_id);
+                g.addEdge(paper_id, id);
             }
         }
 
@@ -166,4 +166,97 @@ void build_db(const std::string &filename) {
     }
 
     g.export_to_file("journalgraph.bin");
+}
+
+void build_author_graph(const std::string& filename) {
+    std::ifstream ifs(filename);
+
+    BTreeDB<paper::Entry> paper_db("paper_keys.db", "paper_values.db", false, true);
+
+    AuthorGraph g;
+
+    if (!ifs.is_open()) {
+        throw std::runtime_error("filename not valid");
+    }
+
+    std::string line;
+    std::getline(ifs, line);
+
+    size_t count = 0;
+    ondemand::parser parser;
+
+    while(std::getline(ifs, line)) {
+        if (count % 10000 == 0) {
+            std::cout << count << std::endl;
+        }
+
+        if (line.at(0) == ',') {
+            line = line.substr(1);
+        }
+
+        padded_string temp(line);
+        ondemand::document curr;
+
+        if (parser.iterate(temp).get(curr)) {
+            std::cout << "error parsing line " + std::to_string(count) << std::endl;
+            continue;
+        }
+
+        if (curr.find_field("id").error() != SUCCESS) {
+            continue;
+        }
+        if (curr.find_field("title").error() != SUCCESS) {
+            continue;
+        }
+        if (curr.find_field("year").error() != SUCCESS) { 
+            continue;
+        }
+        long n_citations = 0;
+        auto cit_handler = curr.find_field("n_citation").get(n_citations);
+        if (cit_handler) {
+            std::cout << "missing # citations " + std::to_string(count) << std::endl;
+            continue;
+        }
+        ++n_citations;
+
+        std::vector<unsigned long> author_vec;
+
+        ondemand::array authors;
+        auto author_error = curr["authors"].get_array().get(authors);
+        if (author_error) {
+            continue;
+        }
+
+        int num_authors = 0;
+
+        for (ondemand::object author : authors) {
+            if (num_authors == AUTHOR_EDGE_LIMIT) break;
+
+            unsigned long id = author["id"];
+
+            author_vec.push_back(id);
+
+            ++num_authors;
+        }
+
+        g.add_same_paper_authors(author_vec, n_citations);
+
+        ondemand::array refs;
+        auto refs_error = curr["references"].get_array().get(refs);
+        if (refs_error) {
+            
+        } else {
+            for (unsigned long id : refs) {
+                paper::Entry cur_paper = paper_db.find(id);
+                if (cur_paper.authors[0] == 0) continue;
+                if (cur_paper.pub_year == 0) continue;
+
+                g.add_referenced_authors(author_vec, cur_paper.authors, n_citations, cur_paper.n_citations);
+            }
+        }
+
+        ++count;
+    }
+
+    g.export_to_file("author_graph.bin");
 }

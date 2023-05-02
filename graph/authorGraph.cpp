@@ -1,61 +1,134 @@
 #include "authorGraph.h"
 
-bool AuthorGraph::addEdge(float weight, const unsigned long& first, const unsigned long& second) {
-    weighted_edge new_edge(weight, first, second);
-    graph[first].push_back(new_edge);
-    return true;
+#include <fstream>
+#include <cstring>
+
+void AuthorGraph::addEdge(int weight, long source, long dest) {
+
+    adj_list[source][dest] += weight;
 }
 
-void AuthorGraph::add_same_paper_authors(const std::vector<unsigned long>& authors_in_paper) {
-    for (int auth_no = 0; auth_no < authors_in_paper.size() && auth_no < author_edge_limit; auth_no++) {
-        for (int auth2_no = 0; auth2_no < authors_in_paper.size() && auth2_no < author_edge_limit; auth2_no++) {
-            if (authors_in_paper[auth_no] != authors_in_paper[auth2_no]) {
-                addEdge(same_paper_weight, authors_in_paper[auth_no], authors_in_paper[auth2_no]);
-            }
+void AuthorGraph::export_to_file(const std::string &filename) {
+    std::ofstream ofs(filename, std::ios::trunc | std::ios::binary);
+    unsigned int total_size = adj_list.size();
+    ofs.write((char*) &total_size, 4);
+
+    for (const auto& elem : adj_list) {
+        ofs.write((char*) &(elem.first), 8);
+        unsigned int size = elem.second.size();
+        ofs.write((char*)(&size), 4);
+        for (const auto& edge : elem.second) {
+            ofs.write((char*)(&edge.first), 8);
+            ofs.write((char*)(&edge.second), 4);
         }
     }
+
+    ofs.close();
 }
 
-void AuthorGraph::add_referenced_authors(const std::vector<unsigned long>& authors_in_paper, const std::vector<unsigned long>& authors_referenced) {
+AuthorGraph::AuthorGraph(const std::string& filename) {
+    std::ifstream ifs(filename, std::ios::in | std::ios::binary);
+    
+    if (!ifs.is_open()) {
+        throw std::runtime_error("error opening author graph binary file");
+    }
+
+    unsigned int size = 0;
+    char buff_4[4];
+    char buff_8[8];
+
+    ifs.read(buff_4, 4);
+    memcpy(&size, buff_4, 4);
+
+    for (unsigned int i = 0; i < size; ++i) {
+        if (i % 100000 == 0) {
+            std::cout << i << std::endl;
+        }
+        // if (i == 100000) break;
+
+        long id = 0;
+        ifs.read(buff_8, 8);
+        memcpy(&id, buff_8, 8);
+
+        unsigned int num_edges = 0;
+        ifs.read(buff_4, 4);
+        memcpy(&num_edges, buff_4, 4);
+
+        if (num_edges == 0) {
+            adj_list[id];
+            continue;
+        }
+
+        char* edges = new char[num_edges * 12];
+        ifs.read(edges, num_edges * 12);
+
+        for (unsigned int j = 0; j < num_edges; ++j) {
+            long edge_id = 0;
+            int weight = 0;
+            memcpy(&edge_id, edges + j * 12, 8);
+            memcpy(&weight, edges + j * 12 + 8, 4);
+
+            adj_list[id][edge_id] = weight;
+        }
+
+        delete[] edges;
+    }
+
+    ifs.close();
+}
+
+void AuthorGraph::add_same_paper_authors(const std::vector<unsigned long>& authors_in_paper, unsigned int n_citation) {
+    for (unsigned int i = 0; i < authors_in_paper.size() && i < AUTHOR_EDGE_LIMIT; ++i) {
+        for (unsigned int j = i + 1; j < authors_in_paper.size() && j < AUTHOR_EDGE_LIMIT; ++j) {
+            addEdge(same_paper_weight * n_citation, authors_in_paper[i], authors_in_paper[j]);
+            addEdge(same_paper_weight * n_citation, authors_in_paper[j], authors_in_paper[i]);
+        }
+    } 
+}
+
+void AuthorGraph::add_referenced_authors(const std::vector<unsigned long>& authors_in_paper, const std::array<long, 8>& authors_referenced, unsigned int n_citation_paper, unsigned int n_citation_ref) {
     //Typically, authors are listed in decreasing contribution with the last as the supervisor.
     //Effectively constant time, max 9 operations
-    for (int auth_no = 0; auth_no < authors_in_paper.size() && auth_no < author_edge_limit; auth_no++) {
-        for (int ref_no = 0; ref_no < authors_referenced.size() && ref_no < author_edge_limit; ref_no++) {
-            addEdge(ref_author_weight, authors_in_paper[auth_no], authors_referenced[ref_no]);
+    for (unsigned int i = 0; i < authors_in_paper.size() && i < AUTHOR_EDGE_LIMIT; ++i) {
+        for (unsigned int j = 0; j < AUTHOR_EDGE_LIMIT; ++j) {
+            if (authors_referenced[j] == 0) {
+                break;
+            } 
+            addEdge(ref_author_weight_orig * n_citation_paper + ref_author_weight_ref * n_citation_ref, authors_in_paper[i], authors_referenced[j]);
         }
     }
 }
 
 
-AuthorGraph::AuthorGraph(const std::vector<author_parse_wrapper>& node_data) {
-    //if authors in same paper, set weight to 1/5. Otherwise, if related by citation, let weight be 5
-    //maps node to authors by index
-    std::unordered_map<unsigned long, std::vector<unsigned long>> static_author_mapping;
+// AuthorGraph::AuthorGraph(const std::vector<author_parse_wrapper>& node_data) {
+//     //if authors in same paper, set weight to 1/5. Otherwise, if related by citation, let weight be 5
+//     //maps node to authors by index
+//     std::unordered_map<unsigned long, std::vector<unsigned long>> static_author_mapping;
 
-    for (size_t paper = 0; paper < node_data.size(); paper++) {
-        const unsigned long& root = node_data[paper].source;
-        static_author_mapping[root] = node_data[paper].authors;
-    }
+//     for (size_t paper = 0; paper < node_data.size(); paper++) {
+//         const unsigned long& root = node_data[paper].source;
+//         static_author_mapping[root] = node_data[paper].authors;
+//     }
 
-    for (const author_parse_wrapper& paper : node_data) {
-        add_same_paper_authors(paper.authors);
-        for (const unsigned long& reference : paper.cited) {
-            add_referenced_authors(paper.authors, static_author_mapping[reference]);
-        }
-    }
+//     for (const author_parse_wrapper& paper : node_data) {
+//         add_same_paper_authors(paper.authors);
+//         for (const unsigned long& reference : paper.cited) {
+//             add_referenced_authors(paper.authors, static_author_mapping[reference]);
+//         }
+//     }
 
-    num_nodes = graph.size();
-}   
+//     num_nodes = graph.size();
+// }   
 
-void AuthorGraph::print_graph() {
-    for (auto& entry : graph) {
-        std::cout << entry.first << " | ";
-        for (auto& ele : entry.second) {
-            std::cout << ele.destination << " " << ele.weight << "\t";
-            if (ele.weight == 5) {
-                std::cout << "!!!!";
-            }
-        }
-        std::cout << "\n";
-    }
-}
+// void AuthorGraph::print_graph() {
+//     for (auto& entry : graph) {
+//         std::cout << entry.first << " | ";
+//         for (auto& ele : entry.second) {
+//             std::cout << ele.destination << " " << ele.weight << "\t";
+//             if (ele.weight == 5) {
+//                 std::cout << "!!!!";
+//             }
+//         }
+//         std::cout << "\n";
+//     }
+// }
