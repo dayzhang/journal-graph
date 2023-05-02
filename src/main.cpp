@@ -1,9 +1,13 @@
 #include <iostream>
 #include <utility>
-#include "utils.cpp"
+
+#include "../graph/utils.cpp"
+#include "../graph/journalGraph.h"
+#include "../graph/authorGraph.h"
+#include "../graph/tarjansSCC.cpp"
+#include "../graph/dijkstrasSP.cpp"
 #include "../Dataset/parsing.cpp"
-#include "journalGraph.h"
-#include "tarjansSCC.cpp"
+
 #define exit_failure 0
 #define exit_success 1
 

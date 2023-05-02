@@ -1,0 +1,9 @@
+Dockerfile
+.devcontainer
+dblp_v14.json
+cleaning/dblp.v12.json
+build/
+data/dblp.v12.json
+build/CMakeFiles/
+.vscode
+.DS_Store
