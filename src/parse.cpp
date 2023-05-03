@@ -12,7 +12,7 @@ using std::endl;
 using std::cin;
 
 int main(int argc, char* argv[]) {
-    if (argc != 1) {
+    if (argc != 2) {
         cout << "Invalid number of arguments passed." << endl;
         cout << "Usage: ./parse [name of json file to parse]" << endl;
         return 0;
@@ -30,10 +30,10 @@ int main(int argc, char* argv[]) {
     }
 
     cout << "Building the databases and the paper graph" << endl;
-    build_db(argv[0]);
+    build_db(argv[1]);
 
     cout << "Building the author graph" << std::endl;
-    build_author_graph(argv[0]);
+    build_author_graph(argv[1]);
 
     cout << "Success parsing the dblp data. Everything should now be in the build directory with the names author_keys.db, author_values.db, paper_keys.db, paper_values.db, author_graph.bin, and journalgraph.bin." << endl;
 

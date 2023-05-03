@@ -156,11 +156,17 @@ journalGraph::journalGraph(const std::string& filename) {
         memcpy(arr.data(), edges, edge_num * 4);
         for (unsigned int i = 0; i < arr.size(); ++i) {
             graph[id].insert(arr.at(i));
-            graph[arr.at(i)].insert(id);
         }
 
         delete[] edges;
     }
 
     ifs.close();
+}
+
+const std::unordered_set<unsigned int>& journalGraph::get_neighbors(unsigned int node) const {
+    if (graph.find(node) == graph.end()) {
+        throw std::invalid_argument("node not in graph");
+    }
+    return graph.at(node);
 }

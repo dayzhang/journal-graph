@@ -463,12 +463,12 @@ BTreeDB<T>::BTreeDB(const std::string& key_filename, const std::string& values_f
         // if not read only, reset the metadata file to allow the storing of the new ones once finished
         fs_meta.close();
         fs_meta.open(metadata_file, std::ios::out | std::ios::trunc);
+
+        // store meta handler with move semantics
+        meta_handler = std::move(fs_meta);
     }
 
     // std::cout << num_entries << ' ' << num_value_pages << ' ' << num_key_pages << ' ' << key_root << std::endl;
-
-    // store meta handler with move semantics
-    meta_handler = std::move(fs_meta);
 
     // initialize empty array
     for (unsigned int i = 0; i < PAGE_SIZE; ++i) {
@@ -504,12 +504,15 @@ void BTreeDB<T>::write_all() {
     key_handler.close();
     value_handler.close();
 
+    if (read_only) {
+        return;
+    }
     // store metadata member variables
     meta_handler << num_entries << std::endl;
     meta_handler << num_value_pages << std::endl;
     meta_handler << num_key_pages << std::endl;
     meta_handler << key_root << std::endl;
-
+    
     meta_handler.close();
 }
 
