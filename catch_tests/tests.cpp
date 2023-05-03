@@ -6,6 +6,7 @@
 #include "../graph/tarjansSCC.cpp"
 #include "../dataset/parsing.cpp"
 
+#include <algorithm>
 #include <unordered_set>
 
 bool verify_graph_properties() {
@@ -127,6 +128,45 @@ TEST_CASE("TarjansTest 2") {
     }
 }
 
-TEST_CASE("TarjansTestFull") {
+bool containsAdj(std::unordered_map<unsigned long, std::unordered_map<unsigned long, int>>& graph, const unsigned long& source, const unsigned long& query) {
+    auto it = graph.find(source);
+    if (it == graph.end()) {
+        return false;
+    }
+    std::unordered_map<unsigned long, int> subgraph = it -> second;
+    if (subgraph.find(query) == subgraph.end()) {
+        return false;
+    }
+    return true;
+}
 
+bool dfs(std::unordered_map<unsigned long, std::unordered_map<unsigned long, int>>& graph,
+const unsigned long& beginning, std::vector<unsigned long>& component, unsigned long& start) {
+    if (component.empty() && containsAdj(graph, beginning, start))  {
+        return true;
+    }
+    for (auto& adj : graph[beginning]) {
+        auto it = std::find(component.begin(), component.end(), adj.first);
+        if (it != component.end()) {
+            component.erase(it);
+            return dfs(graph, adj.first, component, start);
+        }
+    }
+    return false;
+}
+
+bool isStronglyConnectedComponent(std::unordered_map<unsigned long, std::unordered_map<unsigned long, int>>& graph,
+unsigned long& beginning, std::vector<unsigned long>& component, unsigned long& start) {
+    return dfs(graph, beginning, component, start);
+}
+
+TEST_CASE("TarjansTestFull") {
+    AuthorGraph g("../../build/author_graph.bin");
+    std::vector<std::vector<unsigned long>> scc = g.tarjansSCC_with_query(2569299913);
+    auto& graph = g.getGraph();
+    unsigned long start = 2569299913;
+    unsigned long query = 2569299913;
+    for (auto& component : scc) {
+        REQUIRE(isStronglyConnectedComponent(graph, query, component, start));
+    }
 }
