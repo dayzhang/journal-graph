@@ -1,5 +1,5 @@
-
 #include "authorGraph.h"
+
 std::vector<unsigned long> AuthorGraph::dijkstrasShortestPath(const unsigned long& start, const unsigned long& dest) {
     // std::unordered_map<unsigned long, float> distance_map;
     

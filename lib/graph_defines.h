@@ -1,6 +1,5 @@
 #pragma once
 #include <vector>
-#include <string>
 
 struct author_parse_wrapper {
     unsigned long source;

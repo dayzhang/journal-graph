@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <cstring>
+#include <algorithm>
 
 void AuthorGraph::addEdge(int weight, long source, long dest) {
 
@@ -112,6 +113,7 @@ void AuthorGraph::print_graph() {
 
 //For unit testing: Dont use on full dataset
 AuthorGraph::AuthorGraph(const std::vector<author_parse_wrapper>& node_data) {
+
     std::unordered_map<unsigned long, std::vector<unsigned long>> static_author_mapping;
 
     for (size_t paper = 0; paper < node_data.size(); paper++) {
@@ -123,10 +125,11 @@ AuthorGraph::AuthorGraph(const std::vector<author_parse_wrapper>& node_data) {
         add_same_paper_authors(paper.authors, 1);
         for (const unsigned long& reference : paper.cited) {
             std::array<long, 8> arr;
+            std::fill(arr.begin(), arr.end(), 0);
             const std::vector<unsigned long>& to_add = static_author_mapping[reference];
-            std::copy_n(to_add.begin(), to_add.size(), arr.begin());
+            std::copy_n(to_add.begin(), std::min(to_add.size(), arr.size()), arr.begin());
 
-            add_referenced_authors(to_add, arr, 1, 1);
+            add_referenced_authors(paper.authors, arr, 1, 1);
         }
     }
 
