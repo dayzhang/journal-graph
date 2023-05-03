@@ -5,9 +5,29 @@
 #include "../graph/authorGraph.h"
 #include "../graph/tarjansSCC.cpp"
 #include "../dataset/parsing.cpp"
+#include "../storage/btree_db_v2.hpp"
+#include "../storage/btree_types.cpp"
 
 #include <algorithm>
 #include <unordered_set>
+#include <unordered_map>
+#include <random>
+#include <climits>
+
+std::string gen_random(const int len) {
+    static const char alphanum[] =
+        "0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+    std::string tmp_s;
+    tmp_s.reserve(len);
+
+    for (int i = 0; i < len; ++i) {
+        tmp_s += alphanum[rand() % (sizeof(alphanum) - 1)];
+    }
+    
+    return tmp_s;
+}
 
 bool verify_graph_properties() {
     return false;
@@ -73,12 +93,180 @@ TEST_CASE("Dijkstra's Test 2") {
 
 }
 
-TEST_CASE("Database Stores All Queries") {
+TEST_CASE("BTree - simple") {
+    std::string str = "simple test";
+    test::Entry entry(56, str, 199);
 
+    BTreeDB<test::Entry> db("test_db_keys.db", "test_db_values.db", true);
+    db.insert(entry.id, entry);
+
+    test::Entry find = db.find(entry.id);
+
+    REQUIRE(find.x == entry.x);
+    REQUIRE(find.id == entry.id);
+    REQUIRE(std::string(find.str.data()) == std::string(find.str.data()));
+
+    test::Entry find_false = db.find(-1);
+    REQUIRE(find_false.id == -1);
+
+    test::Entry search(56);
+    REQUIRE(db.get_id_from_name(search) == entry.id);
+    
+    entry.x = 77;
+    db.insert(entry.id, entry);
+    REQUIRE(db.find(entry.id).x == 77);
 }
 
-TEST_CASE("Database successfully access all queries") {
+TEST_CASE("BTree - multiple inserts, no splitting") {
+    BTreeDB<test::Entry> db("test_db_keys.db", "test_db_values.db", true);
 
+    std::unordered_map<long, test::Entry> record;
+    for (unsigned int i = 0; i < 50; ++i) {
+        int curr = rand() % INT_MAX;
+        record[curr] = test::Entry(rand() % INT_MAX, gen_random(10), curr);
+        db.insert(record[curr].id, record[curr]);
+    }
+
+    for (const auto& pair : record) {
+        REQUIRE(db.find(pair.first).x == record[pair.first].x);
+        REQUIRE(db.find(pair.first).id == record[pair.first].id);
+        REQUIRE(std::string(db.find(pair.first).str.data()) == std::string(record[pair.first].str.data()));
+    }
+}
+
+TEST_CASE("BTree - persistence, no splitting") {
+    std::unordered_map<long, test::Entry> record;
+
+    {
+        BTreeDB<test::Entry> db("test_db_keys.db", "test_db_values.db", true);
+        for (unsigned int i = 0; i < 50; ++i) {
+            int curr = rand() % INT_MAX;
+            record[curr] = test::Entry(rand() % INT_MAX, gen_random(10), curr);
+            db.insert(record[curr].id, record[curr]);
+        }
+    }
+
+    BTreeDB<test::Entry> new_db("test_db_keys.db", "test_db_values.db", false, true);
+
+    for (const auto& pair : record) {
+        REQUIRE(new_db.find(pair.first).x == record[pair.first].x);
+        REQUIRE(new_db.find(pair.first).id == record[pair.first].id);
+        REQUIRE(std::string(new_db.find(pair.first).str.data()) == std::string(record[pair.first].str.data()));
+    }
+}
+
+TEST_CASE("BTree - insertion, no splitting") {
+    BTreeDB<test::Entry> db("test_db_keys.db", "test_db_values.db", true);
+
+    std::unordered_map<long, test::Entry> record;
+    for (unsigned int i = 0; i < 50; ++i) {
+        int curr = rand() % INT_MAX;
+        record[curr] = test::Entry(rand() % INT_MAX, gen_random(10), curr);
+        db.insert(record[curr].id, record[curr]);
+    }
+
+    for (unsigned int i = 0; i < 50; ++i) {
+        int curr = rand() % INT_MAX;
+        record[curr] = test::Entry(rand() % INT_MAX, gen_random(10), curr);
+        db.insert(record[curr].id, record[curr]);
+    }
+
+    for (const auto& pair : record) {
+        REQUIRE(db.find(pair.first).x == record[pair.first].x);
+        REQUIRE(db.find(pair.first).id == record[pair.first].id);
+        REQUIRE(std::string(db.find(pair.first).str.data()) == std::string(record[pair.first].str.data()));
+    }
+}
+
+TEST_CASE("BTree - find_id, no splitting") {
+    BTreeDB<test::Entry> db("test_db_keys.db", "test_db_values.db", true);
+
+    std::unordered_map<long, test::Entry> record;
+    for (unsigned int i = 0; i < 50; ++i) {
+        int curr = rand() % INT_MAX;
+        record[curr] = test::Entry(rand() % INT_MAX, gen_random(10), curr);
+        db.insert(record[curr].id, record[curr]);
+    }
+
+    for (const auto& pair : record) {
+        REQUIRE(db.get_id_from_name(pair.second.x) == pair.first);
+    }
+}
+
+TEST_CASE("BTree - multiple inserts, splitting") {
+    BTreeDB<test::Entry> db("test_db_keys.db", "test_db_values.db", true);
+
+    std::unordered_map<long, test::Entry> record;
+    for (unsigned int i = 0; i < 10000; ++i) {
+        int curr = rand() % INT_MAX;
+        record[curr] = test::Entry(rand() % INT_MAX, gen_random(10), curr);
+        db.insert(record[curr].id, record[curr]);
+    }
+
+    for (const auto& pair : record) {
+        REQUIRE(db.find(pair.first).x == record[pair.first].x);
+        REQUIRE(db.find(pair.first).id == record[pair.first].id);
+        REQUIRE(std::string(db.find(pair.first).str.data()) == std::string(record[pair.first].str.data()));
+    }
+}
+
+TEST_CASE("BTree - persistence, splitting") {
+    std::unordered_map<long, test::Entry> record;
+
+    {
+        BTreeDB<test::Entry> db("test_db_keys.db", "test_db_values.db", true);
+        for (unsigned int i = 0; i < 10000; ++i) {
+            int curr = rand() % INT_MAX;
+            record[curr] = test::Entry(rand() % INT_MAX, gen_random(10), curr);
+            db.insert(record[curr].id, record[curr]);
+        }
+    }
+
+    BTreeDB<test::Entry> new_db("test_db_keys.db", "test_db_values.db", false, true);
+
+    for (const auto& pair : record) {
+        REQUIRE(new_db.find(pair.first).x == record[pair.first].x);
+        REQUIRE(new_db.find(pair.first).id == record[pair.first].id);
+        REQUIRE(std::string(new_db.find(pair.first).str.data()) == std::string(record[pair.first].str.data()));
+    }
+}
+
+TEST_CASE("BTree - insertion, splitting") {
+    BTreeDB<test::Entry> db("test_db_keys.db", "test_db_values.db", true);
+
+    std::unordered_map<long, test::Entry> record;
+    for (unsigned int i = 0; i < 10000; ++i) {
+        int curr = rand() % INT_MAX;
+        record[curr] = test::Entry(rand() % INT_MAX, gen_random(10), curr);
+        db.insert(record[curr].id, record[curr]);
+    }
+
+    for (unsigned int i = 0; i < 10000; ++i) {
+        int curr = rand() % INT_MAX;
+        record[curr] = test::Entry(rand() % INT_MAX, gen_random(10), curr);
+        db.insert(record[curr].id, record[curr]);
+    }
+
+    for (const auto& pair : record) {
+        REQUIRE(db.find(pair.first).x == record[pair.first].x);
+        REQUIRE(db.find(pair.first).id == record[pair.first].id);
+        REQUIRE(std::string(db.find(pair.first).str.data()) == std::string(record[pair.first].str.data()));
+    }
+}
+
+TEST_CASE("BTree - find_id, splitting") {
+    BTreeDB<test::Entry> db("test_db_keys.db", "test_db_values.db", true);
+
+    std::unordered_map<long, test::Entry> record;
+    for (unsigned int i = 0; i < 10000; ++i) {
+        int curr = rand() % INT_MAX;
+        record[curr] = test::Entry(rand() % INT_MAX, gen_random(10), curr);
+        db.insert(record[curr].id, record[curr]);
+    }
+
+    for (const auto& pair : record) {
+        REQUIRE(db.get_id_from_name(pair.second.x) == pair.first);
+    }
 }
 
 const std::unordered_set<unsigned long> tarjans_test_set1({2142249029, 2113592602, 2103626414, 2117665592, 2023460672, 2174205032, 2022192081});
