@@ -8,7 +8,7 @@
 
 class journalGraph {
 
-    std::unordered_map<unsigned long, std::unordered_set<unsigned long>> graph;//vector-based adjacency list to take advantage of cache
+    std::unordered_map<unsigned int, std::unordered_set<unsigned int>> graph;//vector-based adjacency list to take advantage of cache
     //A lot of performance issues with this as of now. Should consider switching to map-based implementations
     //For storage, will be important to consider a re-id to store as integers
     std::unordered_map<std::string, size_t> name_to_id_;
@@ -18,12 +18,14 @@ class journalGraph {
 public:
 
     journalGraph() = default; // subsetting author
-    journalGraph(const std::vector<std::vector<unsigned long>>& node_data);
-    ~journalGraph() = default;
-    bool addEdge(unsigned long id1, unsigned long id2); //return false if fails to add
+    journalGraph(const std::vector<std::vector<unsigned int>>& node_data);
+    journalGraph(const std::string& filename);
 
-    std::vector<std::pair<unsigned long, unsigned long>> getIdeaHistory(const unsigned long& source);
-    void dfs(const unsigned long& vertex, std::unordered_map<unsigned long, bool>& seen, std::vector<std::pair<unsigned long, unsigned long>>& record);
+    ~journalGraph() = default;
+    bool addEdge(unsigned int id1, unsigned int id2); //return false if fails to add
+
+    std::vector<std::pair<unsigned long, unsigned long>> getIdeaHistory(const unsigned int& source);
+    void dfs(const unsigned int& vertex, std::unordered_map<unsigned long, bool>& seen, std::vector<std::pair<unsigned long, unsigned long>>& record);
 
     void print();
 

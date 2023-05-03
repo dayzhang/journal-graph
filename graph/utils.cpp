@@ -2,9 +2,9 @@
 #include <iostream>
 #include <utility>
 #include <vector>
-#include "../Dataset/parsing.cpp"
-#include "journalGraph.cpp"
-#include "authorGraph.cpp"
+#include "../dataset/parsing.cpp"
+#include "journalGraph.h"
+#include "authorGraph.h"
 #define exit_failure 0
 #define exit_success 1
 
@@ -17,7 +17,7 @@ bool print_parsed_references() {
 
     for (auto& entry : parsed_info) {
         std::cout << "Paper ID: " << entry[0] << " with references:\n";
-        for (int paper_num = 1; paper_num < entry.size(); paper_num++) {
+        for (unsigned long paper_num = 1; paper_num < entry.size(); paper_num++) {
             std::cout << entry[paper_num] << " ";
         }
 
@@ -36,11 +36,11 @@ bool print_parsed_authors() {
 
     for (auto& entry : parsed_info) {
         std::cout << "Paper ID: " << entry.source << "with references and authors:\n";
-        for (int i = 0; i < entry.cited.size(); i++) {
+        for (unsigned long i = 0; i < entry.cited.size(); i++) {
             std::cout << entry.cited[i] << " | ";
         }
         std::cout << "authors --------- ";
-        for (int i = 0; i < entry.authors.size(); i++) {
+        for (unsigned long i = 0; i < entry.authors.size(); i++) {
             std::cout << entry.authors[i] << " ";
         }
 
@@ -59,7 +59,7 @@ bool run_dfs() {
         return exit_failure;
     }
 
-    journalGraph g(parsed_info);
+    journalGraph g(std::string("../data/dblp.v12.json"));
 
     std::vector<std::pair<unsigned long, unsigned long>> answer = g.getIdeaHistory(86197);
 
@@ -68,18 +68,4 @@ bool run_dfs() {
     }
 
     return exit_success;
-}
-
-void test_tarjans() {
-    std::vector<author_parse_wrapper> p;
-    parse_authors(p, "../data/tarjanstest.json");
-    AuthorGraph g(p);
-    std::vector<std::vector<unsigned long>> scc = g.tarjansSCC_with_query(2142249029);
-    for (auto& i : scc) {
-        std::cout << "Strongly Connected Component | ";
-        for (auto& entry : i) {
-            std::cout << entry << " - ";
-        }
-        std::cout << "\n";
-    }
 }

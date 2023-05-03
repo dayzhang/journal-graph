@@ -62,7 +62,7 @@ namespace paper {
         unsigned int pub_year;
         long id;
 
-        Entry(std::string& paper_title, std::string& paper_keywords, unsigned int paper_citations, unsigned int paper_year, std::vector<long> paper_authors, long set_id): n_citations(paper_citations), pub_year(paper_year), id(set_id) {
+        Entry(std::string& paper_title, std::string& paper_keywords, unsigned int paper_citations, unsigned int paper_year, std::array<long, 8> paper_authors, long set_id): n_citations(paper_citations), pub_year(paper_year), id(set_id) {
             title.fill(0);
             keywords.fill(0);
             authors.fill(0);
@@ -79,12 +79,21 @@ namespace paper {
                 strcpy(keywords.data(), paper_keywords.c_str());
             }
 
-            for (unsigned int i = 0; i < 8; ++i) {
-                authors[i] = paper_authors[i];
+            memcpy(authors.data(), paper_authors.data(), 64);
+        }
+
+        Entry(std::string& paper_title): n_citations(0), pub_year(0), id(0) {
+            title.fill(0);
+            keywords.fill(0);
+            authors.fill(0);
+            if (title.size() >= 96) {
+                strcpy(title.data(), paper_title.substr(0, 95).c_str());
+            } else {
+                strcpy(title.data(), paper_title.c_str());
             }
         }
 
-        Entry() {}
+        Entry(): pub_year(0) {}
 
         static void deserialize_value(char* source, Entry* dest) {
             memcpy(dest->title.data(), source, 96);
@@ -106,9 +115,11 @@ namespace paper {
 
         static const unsigned int size = 96 + 40 + 8 * 8 + 4 + 4 + 8;
 
-        bool operator=(const Entry& other) {
+        bool operator==(const Entry& other) {
             return std::string(title.data()) == std::string(other.title.data());
         }
+
+        Entry(const paper::Entry& other) = default;
     };
 }
 

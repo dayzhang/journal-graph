@@ -28,6 +28,7 @@ int dataset_parse()
 void big_clean(std::string input_file) {
     int count = 0;
     json::parser_callback_t cb = [&count](int depth, json::parse_event_t event, json& parsed) {
+        (void) depth;
         if (count % 100 == 0) {
             std::cout << "at " << count << " elements so far\n";
         }
@@ -111,14 +112,13 @@ int parse_references(std::vector<std::vector<unsigned long>>& parsed_data, std::
 
     for (auto json_line : array_of_json) {
         std::vector<unsigned long> new_line_of_data;
-
+        unsigned long id;
         try {
-            long long id = json_line["id"];
+            id = json_line["id"];
         } catch (exception& e) {
             std::cout << e.what() << "\n";
             continue;
         }
-        unsigned long id = json_line["id"];
         new_line_of_data.push_back(id);
 
         for (auto& elem : json_line["references"]) {
@@ -137,7 +137,7 @@ int parse_references(std::vector<std::vector<unsigned long>>& parsed_data, std::
 
     return 1;
 }
-
+/*
 //2DV to take advantage of cache locality
 int parse_references_v12(std::vector<std::vector<long>>& parsed_data, std::string input_file) {
     std::ifstream f(input_file);
@@ -174,3 +174,4 @@ int parse_references_v12(std::vector<std::vector<long>>& parsed_data, std::strin
 
     return 1;
 }
+*/
