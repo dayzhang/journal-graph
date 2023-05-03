@@ -18,6 +18,7 @@ include_directories(${CMAKE_SOURCE_DIR})
 add_executable(main ${CMAKE_SOURCE_DIR}/src/main.cpp ${CMAKE_SOURCE_DIR}/lib/simdjson.cpp ${CMAKE_SOURCE_DIR}/graph/authorGraph.cpp ${CMAKE_SOURCE_DIR}/graph/journalGraph.cpp)
 add_executable(parse ${CMAKE_SOURCE_DIR}/src/parse.cpp ${CMAKE_SOURCE_DIR}/lib/simdjson.cpp ${CMAKE_SOURCE_DIR}/parsing/parsing.cpp ${CMAKE_SOURCE_DIR}/graph/journalGraph.cpp
 ${CMAKE_SOURCE_DIR}/graph/authorGraph.cpp)
+add_executable(db_interface ${CMAKE_SOURCE_DIR}/src/db_interface.cpp ${CMAKE_SOURCE_DIR}/graph/journalGraph.cpp ${CMAKE_SOURCE_DIR}/graph/authorGraph.cpp)
 
 add_executable(run_tests ${CMAKE_SOURCE_DIR}/catch_tests/tests.cpp ${CMAKE_SOURCE_DIR}/graph/authorGraph.cpp ${CMAKE_SOURCE_DIR}/graph/journalGraph.cpp)
 

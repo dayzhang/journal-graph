@@ -6,8 +6,6 @@
 #include "../parsing/parsing.h"
 #include "../storage/btree_db_v2.hpp"
 #include "../storage/btree_types.cpp"
-#include "../graph/journalGraph.h"
-#include "../graph/authorGraph.h"
 
 using std::cout;
 using std::endl;
