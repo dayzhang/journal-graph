@@ -6,6 +6,8 @@
 #include <vector>
 #include <iostream>
 
+#define NULL_VAL -1
+
 /**
     Template ValueEntry types for the BTrees are defined here. Each must have member variables containing all relevant data, an id field, a default constructor, a static size member detailing the size of the struct in bytes, a static deserialization function, and serialization function
 */
@@ -63,7 +65,7 @@ namespace author {
         /**
             Default constructor for author entry. Never used in reality except as a temporary variable or as an invalid result (with id -1)
         */
-        Entry(): id(-1) {}
+        Entry(): id(NULL_VAL) {}
 
         /**
             Function to deserialize a char array to get the entry its data corresponds to
@@ -169,7 +171,7 @@ namespace paper {
         /**
             Default constructor for author entry. Never used in reality except as a temporary variable or as an invalid result (with id -1)
         */
-        Entry(): id(-1) {}
+        Entry(): id(NULL_VAL) {}
 
         /**
             Function to deserialize a char array to get the entry its data corresponds to
@@ -225,6 +227,7 @@ namespace test {
         long id;
 
         Entry(int set_x, const std::string& set_str, long set_id): x(set_x), id(set_id) {
+            str.fill(0);
             if (set_str.size() >= 12) {
                 strcpy(str.data(), set_str.substr(0, 11).c_str());
             } else {
@@ -232,11 +235,11 @@ namespace test {
             }
         }
 
-        Entry(int search_x): x(search_x), id(0) {
+        Entry(int search_x): x(search_x) {
             str.fill(0);
         }
 
-        Entry() {}
+        Entry(): id(NULL_VAL) {}
 
         static void deserialize_value(char* source, Entry* dest) {
             memcpy(&(dest->x), source, 4);

@@ -474,21 +474,25 @@ void BTreeDB<T>::write_all() {
     if (read_only) return;
 
     // iterate over all key pages and write if dirty; also delete allocated data
-    for (const auto& entry : key_cache) {
+    for (auto& entry : key_cache) {
         if (entry.second.data != nullptr && entry.second.dirty) {
             write_page(entry.first, Key);
-        } else if (entry.second.data != nullptr) {
+        } 
+        if (entry.second.data != nullptr) {
             delete[] entry.second.data;
+            entry.second.data = nullptr;
         }
         
     }
     
     // iterate over all value pages and write if dirty; also delete allocated data
-    for (const auto& entry : value_cache) {
+    for (auto& entry : value_cache) {
         if (entry.second.data != nullptr && entry.second.dirty) {
             write_page(entry.first, Value);
-        } else if (entry.second.data != nullptr) {
+        } 
+        if (entry.second.data != nullptr) {
             delete[] entry.second.data;
+            entry.second.data = nullptr;
         }
     }
 
