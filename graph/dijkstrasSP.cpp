@@ -29,14 +29,18 @@ std::vector<unsigned long> AuthorGraph::dijkstrasShortestPath(const unsigned lon
         queue.push(edge);
     }
     */
+    for (auto destination : adj_list[start]) {
+        queue.push(std::pair<unsigned long, unsigned long>(start, destination.first));
+    }
     bool flag = true;
     while (!queue.empty() && previous.size() != num_nodes) {
         std::pair<unsigned long, unsigned long> cur = queue.top();
         queue.pop();
+        //std::cout << cur.second  << " " << adj_list[cur.first][cur.second] << " ";
         if (cur.second == dest) {
             flag = false;
         }
-        if (previous.find(cur.second) != previous.end()) {
+        if (previous.find(cur.second) == previous.end()) {
             for (auto other : adj_list.at(cur.second)) {
                 queue.push(std::pair<unsigned long, unsigned long>(cur.second, other.first));
             }
@@ -46,7 +50,9 @@ std::vector<unsigned long> AuthorGraph::dijkstrasShortestPath(const unsigned lon
             previous[cur.second] = cur.first;
         }
     }
+    // std::cout << std::endl;
     if (flag) {
+        std::cout << "Not connected" << std::endl;
         return std::vector<unsigned long>();
     }
     std::vector<unsigned long> ans;

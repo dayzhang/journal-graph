@@ -7,6 +7,7 @@
 #include "../dataset/parsing.cpp"
 #include "../storage/btree_db_v2.hpp"
 #include "../storage/btree_types.cpp"
+#include "../graph/dijkstrasSP.cpp"
 
 #include <algorithm>
 #include <unordered_set>
@@ -86,11 +87,22 @@ TEST_CASE("Ensure valid JournalGraph") {
 }
 
 TEST_CASE("Dijkstra's Test 1") {
-
+    std::vector<author_parse_wrapper> values;
+    parse_authors(values, "../data/tarjanstest.json");
+    AuthorGraph g(values);
+    std::vector<unsigned long> path1 = g.dijkstrasShortestPath(2022192081, 2113592602);
+    std::vector<unsigned long> path2 = g.dijkstrasShortestPath(2022192081, 2117665592);
+    REQUIRE(path1.size() == 4);
+    REQUIRE(path2.size() == 2);
+    
 }
 
 TEST_CASE("Dijkstra's Test 2") {
-
+    std::vector<author_parse_wrapper> values;
+    parse_authors(values, "../data/tarjanstest.json");
+    AuthorGraph g(values);
+    std::vector<unsigned long> path1 = g.dijkstrasShortestPath(2022192081, 2425818370);
+    REQUIRE(path1.empty());
 }
 
 TEST_CASE("BTree - simple") {
