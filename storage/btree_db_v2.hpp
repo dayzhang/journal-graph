@@ -470,29 +470,25 @@ BTreeDB<T>::BTreeDB(const std::string& key_filename, const std::string& values_f
 
 template <typename T>
 void BTreeDB<T>::write_all() {
-    // don't run if read only
-    if (read_only) return;
 
     // iterate over all key pages and write if dirty; also delete allocated data
     for (auto& entry : key_cache) {
-        if (entry.second.data != nullptr && entry.second.dirty) {
+        if (entry.second.data != nullptr && entry.second.dirty && !read_only) {
             write_page(entry.first, Key);
         } 
         if (entry.second.data != nullptr) {
             delete[] entry.second.data;
-            entry.second.data = nullptr;
         }
         
     }
     
     // iterate over all value pages and write if dirty; also delete allocated data
     for (auto& entry : value_cache) {
-        if (entry.second.data != nullptr && entry.second.dirty) {
+        if (entry.second.data != nullptr && entry.second.dirty && !read_only) {
             write_page(entry.first, Value);
         } 
         if (entry.second.data != nullptr) {
             delete[] entry.second.data;
-            entry.second.data = nullptr;
         }
     }
 
@@ -1092,7 +1088,6 @@ char* BTreeDB<T>::get_page(unsigned int page_num, FileType type) {
             }
 
             // cache miss; allocate data for new block and manually copy it with data read in from teh db file
-            key_cache[page_num] = CacheBlock();
             key_cache[page_num].data = new char[PAGE_SIZE];
             key_handler.seekg(page_num * PAGE_SIZE);
             key_handler.read(key_cache.at(page_num).data, PAGE_SIZE);
@@ -1104,7 +1099,6 @@ char* BTreeDB<T>::get_page(unsigned int page_num, FileType type) {
                 return value_cache.at(page_num).data;
             }
 
-            value_cache[page_num] = CacheBlock();
             value_cache[page_num].data = new char[PAGE_SIZE];
             value_handler.seekg(page_num * PAGE_SIZE);
             value_handler.read(value_cache.at(page_num).data, PAGE_SIZE);
