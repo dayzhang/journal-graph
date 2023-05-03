@@ -9,42 +9,35 @@
 #include "../graph/journalGraph.h"
 #include "../graph/authorGraph.h"
 
-int main() {
-    // std::cout << sizeof(long) << std::endl;
-    // BTreeDB<author::Entry> db("author_keys.db", "author_values.db");
-    // // BTreeDB<test::Entry> db("keys.db", "values.db");
+using std::cout;
+using std::endl;
+using std::cin;
 
-    // // // for (unsigned int i = 0; i < 10000; ++i) {
-    // // //     test::Entry temp(i);
-    // // //     db.insert(i, temp);
-    // // // }
+int main(int argc, char* argv[]) {
+    if (argc != 1) {
+        cout << "Invalid number of arguments passed." << endl;
+        cout << "Usage: ./parse [name of json file to parse]" << endl;
+        return 0;
+    }
 
-    // // for (unsigned int i = 0; i < 10000; ++i) {
-    // //     std::cout << db.find(i).x << std::endl;;
-    // // }
-
-    // std::cout << std::string(db.find(2103626414).organization.data()) << std::endl;
-    // create_db();
-
+    cout << "Are you sure you want to parse the data? It will take around half an hour with the full dataset and will wipe any any existing db and graph files." << endl;
+    cout << "Type y if you want to proceed." << endl;
     
-    // BTreeDB<paper::Entry> db("paper_keys.db", "paper_values.db", false, true);
-    // std::string title = "Formal agent-oriented ubiquitous computing: a computational intelligence support for information and services integration";
+    std::string input;
+    cin >> input;
 
-    // paper::Entry entry(title);
+    if (input != "y") {
+        cout << "Terminating program..." << endl;
+        return 0;
+    }
 
-    // std::cout << db.get_id_from_name(entry) << std::endl;
+    cout << "Building the databases and the paper graph" << endl;
+    build_db(argv[0]);
 
-    // std::cout << std::string(db.find(1388).title.data()) << std::endl;
-    // std::cout << db.find(1388).authors[0] << std::endl;
+    cout << "Building the author graph" << std::endl;
+    build_author_graph(argv[0]);
 
+    cout << "Success parsing the dblp data. Everything should now be in the build directory with the names author_keys.db, author_values.db, paper_keys.db, paper_values.db, author_graph.bin, and journalgraph.bin." << endl;
 
-    // journalGraph g("journalgraph.bin");
-
-    // build_db("../data/dblp.v12.json");
-
-    // build_author_graph("../data/dblp.v12.json");
-
-    AuthorGraph g("author_graph.bin");
-    
-    return 1;
+    return 0;
 }
