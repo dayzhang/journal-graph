@@ -61,7 +61,7 @@ bool run_dfs() {
 
     journalGraph g(std::string("../data/dblp.v12.json"));
 
-    std::vector<std::pair<unsigned long, unsigned long>> answer = g.getIdeaHistory(86197);
+    std::vector<std::pair<unsigned int, unsigned int>> answer = g.getIdeaHistory(86197);
 
     for (auto& id : answer) {
         std::cout << id.second << " referenced by " << id.first << "\n";
