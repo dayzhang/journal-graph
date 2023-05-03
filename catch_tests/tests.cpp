@@ -104,6 +104,11 @@ TEST_CASE("Ensure DFS works as intended") {
             REQUIRE(p.second == 2036110521);
         }
     }
+
+    //Asserts that it is an actual path and not some mumbo jumbo
+    for (size_t i = 0; i < ans.size() - 1; i++) {
+        REQUIRE(ans[i].second == ans[i + 1].first);
+    }
 }
 
 TEST_CASE("Ensure BFS works as intended") {
