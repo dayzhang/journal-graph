@@ -33,6 +33,7 @@ int main(int argc, char* argv[]) {
     cout << "We don't recommend insertion if you are working with the full graph/paper databases to prevent any data corruption." << endl;
 
     cout << "DO NOT ctrl + C to exit the prompt if you are not in read only mode; only use the quit command to prevent data corruption." << endl;
+    cout << "If a key/value file opening error is thrown, try running parse first or download the data directly." << endl;
 
     std::string temp;
 
@@ -92,8 +93,13 @@ int main(int argc, char* argv[]) {
                 } else {
                     cout << "id: " << found << endl;
                 }
+            } else if (input == "help") {
+                cout << "insert - insert an entry into the database (not recommended for author/graph)" << endl;
+                cout << "find - find the entry in the database corresponding to an id" << endl;
+                cout << "get_id - find the characteristic name/title/value associated an id" << endl;
+                cout << "quit - exit the CLI interface" << endl;
             } else {
-                cout << "Invalid command entered. Valid commands include insert, find, get_id, and quit" << endl;
+                cout << "Invalid command entered. Valid commands include insert, find, get_id, help, and quit" << endl;
             }
         }
     } else if (std::string(argv[3]) == "paper") {
@@ -193,16 +199,22 @@ int main(int argc, char* argv[]) {
                 std::getline(cin, temp);
                 long id = std::stol(temp);
 
-                cout << "Papers: ";
+                cout << "Papers (this may take a while): ";
 
                 for (long x : db.get_papers(id)) {
                     cout << x << ' ';
                 }
 
                 cout << endl;
+            } else if (input == "help") {
+                cout << "insert - insert an entry into the database (not recommended for author/graph)" << endl;
+                cout << "find - find the entry in the database corresponding to an id" << endl;
+                cout << "get_id - find the characteristic name/title/value associated an id" << endl;
+                cout << "search_author - find all papers associated with an author (this might take a while)" << endl;
+                cout << "quit - exit the CLI interface" << endl;
             } else {
                 cout << input << endl;
-                cout << "Invalid command entered. Valid commands include insert, find, get_id, and quit" << endl;
+                cout << "Invalid command entered. Valid commands include insert, find, get_id, search_author, help, and quit" << endl;
             }
         }
     } else if (std::string(argv[3]) == "author") {
@@ -264,8 +276,13 @@ int main(int argc, char* argv[]) {
                 } else {
                     cout << "id: " << found << endl;
                 }
+            } else if (input == "help") {
+                cout << "insert - insert an entry into the database (not recommended for author/graph)" << endl;
+                cout << "find - find the entry in the database corresponding to an id" << endl;
+                cout << "get_id - find the characteristic name/title/value associated an id" << endl;
+                cout << "quit - exit the CLI interface" << endl;
             } else {
-                cout << "Invalid command entered. Valid commands include insert, find, get_id, and quit" << endl;
+                cout << "Invalid command entered. Valid commands include insert, find, get_id, help, and quit" << endl;
             }
         }
     }

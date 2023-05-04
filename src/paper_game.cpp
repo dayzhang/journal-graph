@@ -14,16 +14,21 @@ using std::cout;
 using std::endl;
 using std::cin;
 
-int main() {
+int main(int argc, char* argv[]) {
+    if (argc != 2) {
+        cout << "invalid number of arguments passed" << endl;
+        cout << "usage: ./paper_game [start paper (try 1091 if you don't have a specific one)]" << endl;
+    }
+
     cout << "Initializing the journal graph from journalgraph.bin" << endl;
+    cout << "If a key/value file opening error is thrown, try running parse first or download the data directly." << endl;
     journalGraph g("journalgraph.bin");
 
     cout << "Initializing the paper database using the paper_keys.db and paper_values.db files" << endl;
     BTreeDB<paper::Entry> db("paper_keys.db", "paper_values.db", false, true);
-    
 
     // TODO: get a random start id and a random end id (using BFS to find the smallest path and to ensure a solution is possible)
-    long curr = 1091;
+    long curr = std::stol(argv[1]);
     int steps = 0;
 
     while (true) {
@@ -68,8 +73,13 @@ int main() {
             }
         } else if (input == "quit") {
             break;
+        } else if (input == "help") {
+            cout << "get_neighbors - list the neighbors of the current paper (in ids)" << endl;
+            cout << "query - get info about a specific paper using its id" << endl;
+            cout << "move - move to another adjacent paper" << endl;
+            cout << "quit - exit the CLI interface" << endl;
         } else {
-            cout << "Invalid command. The available ones include get_neighbors, query, move, and quit." << endl;
+            cout << "Invalid command. The available ones include get_neighbors, query, move, help, and quit." << endl;
         }
         cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
