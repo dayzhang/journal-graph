@@ -7,22 +7,13 @@
 #include <vector>
 #include <iomanip>
 
-void journalGraph::print() {
-    for (auto& pair : graph) {
-        std::cout << "Start Node: " << pair.first << " | " << std::endl;
-        for (unsigned int other : graph.at(pair.first)) {
-            std::cout << other << " ";
-        }
-        std::cout << std::endl;
-    }
-}
-
 bool journalGraph::addEdge(unsigned int id1, unsigned int id2) {
     if (id1 == 0 || id2 == 0) {
         return false;
     }
-
-    graph[id2].insert(id1);
+    if (graph.find(id2) == graph.end()) {
+        graph[id2] = std::unordered_set<unsigned int>();
+    }
     graph[id1].insert(id2);
     return true;
 } 
@@ -46,66 +37,56 @@ struct traversal_element {
     unsigned int child;
     traversal_element(unsigned int _parent, unsigned int _child) : parent(_parent), child(_child) {};
 };
-void journalGraph::dfs(const unsigned int& vertex, std::unordered_map<unsigned long, bool>& seen, std::vector<std::pair<unsigned long, unsigned long>>& record) { 
-    // not entirely sure what the dfs is supposed to be for, but changed it to iterative so it doesn't exceed recursion limit
+
+void journalGraph::dfs(const unsigned int& vertex, std::unordered_map<unsigned int, bool>& seen, std::vector<std::pair<unsigned int, unsigned int>>& record) { 
+    
+    if (graph.find(vertex) == graph.end()) {
+        graph[vertex] = std::unordered_set<unsigned int>();
+    }
+
     std::stack<traversal_element> node_stack;
     node_stack.push({0, vertex});
     while (!node_stack.empty()) {
+
         traversal_element current_node = node_stack.top();
         node_stack.pop();
+
+        if (seen.find(current_node.child) == seen.end()) {
+            seen[current_node.child] = false;
+        }
+
         if (!seen.at(current_node.child)) {
             seen.at(current_node.child) = true;
             record.push_back(std::make_pair(current_node.parent, current_node.child));
         }
+        
         for (unsigned int other : graph.at(current_node.child)) {
-            if (!seen.at(other)) {
+
+            if (seen.find(other) == seen.end()) {
+                seen[other] = false;
+            }
+
+            if (!seen[other]) {
                 node_stack.push({current_node.child, other});
+                break;
             }
         }
     }
 }
 
-/*
-// not entirely sure what the dfs is supposed to be for, but changed it to iterative so it doesn't exceed recursion limit
-void journalGraph::dfs(const unsigned int& start_node, std::vector<size_t>& record) {
-    // std::cout << __LINE__ << std::endl;
-
-    std::vector<bool> seen(nodes_, false);
-    std::stack<size_t> node_stack;
-    node_stack.push(start_node);
-    while (!node_stack.empty()) {
-        size_t current_node = node_stack.top();
-        node_stack.pop();
-        if (!seen.at(current_node)) {
-            seen.at(current_node) = true;
-            record.push_back(current_node);
-        }
-
-
-        for (size_t other : graph_.at(current_node)) {
-            if (!seen.at(other)) {
-                node_stack.push(other);
-            }
-
-        }
-    }
-}
-*/
-
-
-std::vector<std::pair<unsigned long, unsigned long>> journalGraph::getIdeaHistory(const unsigned int& source) {
+std::vector<std::pair<unsigned int, unsigned int>> journalGraph::getIdeaHistory(const unsigned int& source) {
     if (graph.find(source) == graph.end()) {
         std::cout << "source: " << source << " not found in database.\n";
-        return std::vector<std::pair<unsigned long, unsigned long>>();
+        return std::vector<std::pair<unsigned int, unsigned int>>();
     }
 
-    std::unordered_map<unsigned long, bool> seen;
-    for (auto& key : graph) {
-        seen[key.first] = false;
-    }
-    std::vector<std::pair<unsigned long, unsigned long>> record;
+    std::unordered_map<unsigned int, bool> seen;
+
+    std::vector<std::pair<unsigned int, unsigned int>> record;
     dfs(source, seen, record);
+
     return record;
+    
 }
 
 void journalGraph::export_to_file(const std::string& filename) {
