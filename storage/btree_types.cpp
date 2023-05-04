@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstring>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -9,7 +10,7 @@
 #define NULL_VAL -1
 
 /**
-    Template ValueEntry types for the BTrees are defined here. Each must have member variables containing all relevant data, an id field, a default constructor, a static size member detailing the size of the struct in bytes, a static deserialization function, and serialization function
+    Template ValueEntry types for the BTrees are defined here. Each must have member variables containing all relevant data, an id field, a default constructor, a static size member detailing the size of the struct in bytes, a static deserialization function, and serialization function. There is also an optional operator<< function that is only applicable for the paper db; for the other ones, it just returns false.
 */
 
 namespace author {
@@ -65,7 +66,10 @@ namespace author {
         /**
             Default constructor for author entry. Never used in reality except as a temporary variable or as an invalid result (with id -1)
         */
-        Entry(): id(NULL_VAL) {}
+        Entry(): id(NULL_VAL) {
+            name.fill(0);
+            organization.fill(0);
+        }
 
         /**
             Function to deserialize a char array to get the entry its data corresponds to
@@ -104,6 +108,11 @@ namespace author {
         */
         bool operator==(const Entry& other) {
             return std::string(name.data()) == std::string(other.name.data());
+        }
+
+        bool has_author(long author_id) {
+            author_id = author_id;
+            throw std::runtime_error("invalid call");
         }
     };
 }
@@ -171,7 +180,11 @@ namespace paper {
         /**
             Default constructor for author entry. Never used in reality except as a temporary variable or as an invalid result (with id -1)
         */
-        Entry(): id(NULL_VAL) {}
+        Entry(): id(NULL_VAL) {
+            title.fill(0);
+            keywords.fill(0);
+            authors.fill(0);
+        }
 
         /**
             Function to deserialize a char array to get the entry its data corresponds to
@@ -216,6 +229,17 @@ namespace paper {
         bool operator==(const Entry& other) {
             return std::string(title.data()) == std::string(other.title.data());
         }
+
+        bool has_author(long author_id) {
+            int i = 0;
+            while (authors[i] != 0 && i < 8) {
+                if (author_id == authors[i]) {
+                    return true;
+                }
+                ++i;
+            }
+            return false;
+        }
     };
 }
 
@@ -239,7 +263,9 @@ namespace test {
             str.fill(0);
         }
 
-        Entry(): id(NULL_VAL) {}
+        Entry(): id(NULL_VAL) {
+            str.fill(0);
+        }
 
         static void deserialize_value(char* source, Entry* dest) {
             memcpy(&(dest->x), source, 4);
@@ -257,6 +283,11 @@ namespace test {
 
         bool operator==(const Entry& other) {
             return x == other.x;
+        }
+
+        bool has_author(long author_id) {
+            author_id = author_id;
+            throw std::runtime_error("invalid call");
         }
     };
 }

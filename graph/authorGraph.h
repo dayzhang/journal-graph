@@ -7,7 +7,7 @@
 #include <queue>
 #include <algorithm>
 #include <stack>
-#include "../lib/graph_defines.h"
+#include "../graph/graph_defines.h"
 
 #define AUTHOR_EDGE_LIMIT 8
 #define same_paper_weight 10

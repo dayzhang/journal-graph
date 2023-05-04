@@ -162,6 +162,11 @@ class BTreeDB {
         */
         long get_id_from_name(const T& search_val);
 
+        /**
+
+        */
+        std::vector<long> get_papers(long author_id);
+
     private:
     
         /**
@@ -1129,4 +1134,24 @@ long BTreeDB<T>::get_id_from_name(const T& search_val) {
         }
     }
     return -1;
+}
+
+template <typename T>
+std::vector<long> BTreeDB<T>::get_papers(long author_id) {
+    std::vector<long> res;
+    try {
+        ValuePageInterface iter(this);
+        for (unsigned int i = 0; i < num_entries; ++i) {
+            T curr = iter.get_value(i);
+            if (curr.has_author(author_id)) {
+                res.push_back(curr.id);
+            }
+        }
+
+        return res;
+    } catch (std::runtime_error& err) {
+        write_all();
+        throw std::runtime_error("function not defined for this template type");
+    }
+    
 }

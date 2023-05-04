@@ -1,6 +1,6 @@
 #pragma once
 #include "json.hpp"
-#include "../lib/graph_defines.h"
+#include "../graph/graph_defines.h"
 #include <fstream>
 #include <iostream>
 using namespace std;
