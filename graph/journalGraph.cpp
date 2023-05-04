@@ -39,7 +39,7 @@ struct traversal_element {
 };
 
 void journalGraph::dfs(const unsigned int& vertex, std::unordered_map<unsigned int, bool>& seen, std::vector<std::pair<unsigned int, unsigned int>>& record) { 
-    // not entirely sure what the dfs is supposed to be for, but changed it to iterative so it doesn't exceed recursion limit
+    
     if (graph.find(vertex) == graph.end()) {
         graph[vertex] = std::unordered_set<unsigned int>();
     }

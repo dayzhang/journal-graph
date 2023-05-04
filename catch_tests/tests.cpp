@@ -92,11 +92,14 @@ TEST_CASE("Ensure References Parser Works as Intended") {
 }
 
 TEST_CASE("Ensure DFS works as intended") {
-    journalGraph g("../../build/journalgraph.bin");
+    journalGraph g("../data/journalgraph.bin");
     
     std::vector<std::pair<unsigned int, unsigned int>> ans = g.getIdeaHistory(2036110521);
 
-    std::cout << ans.size();
+    for (auto& pair : ans) {
+        std::cout << pair.first << " -> " << pair.second << " -> ";
+    }
+    std::cout << "\n";
     REQUIRE(ans.size() == 511);
 
     for (auto& p : ans) {
@@ -183,7 +186,7 @@ TEST_CASE("TarjansTest 2") {
 }
 
 TEST_CASE("TarjansTestFull") {
-    AuthorGraph g("../../build/author_graph.bin");
+    AuthorGraph g("../data/author_graph.bin");
     std::vector<std::vector<unsigned long>> scc = g.tarjansSCC_with_query(2569299913);
     auto& graph = g.getGraph();
     unsigned long start = 2569299913;
