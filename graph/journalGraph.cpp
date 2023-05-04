@@ -145,17 +145,9 @@ journalGraph::journalGraph(const std::string& filename) {
     ifs.close();
 }
 
-//For testing
-std::unordered_map<unsigned int, std::unordered_set<unsigned int>> journalGraph::getGraph() {
-    return graph;
-}
-
-void journalGraph::print() {
-    for (auto& pair : graph) {
-        std::cout << "Start Node: " << pair.first << " | " << std::endl;
-        for (unsigned int other : graph.at(pair.first)) {
-            std::cout << other << " ";
-        }
-        std::cout << std::endl;
+const std::unordered_set<unsigned int>& journalGraph::get_neighbors(unsigned int node) const {
+    if (graph.find(node) == graph.end()) {
+        throw std::invalid_argument("node not in graph");
     }
+    return graph.at(node);
 }

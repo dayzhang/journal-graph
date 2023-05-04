@@ -8,6 +8,10 @@
 #include <array>
 #include <iostream>
 
+/**
+    Proof of concept for a file-based database. Implemented as a contiguous vector, with O(n) searching and O(1) find. Use not recommended for performance reasons
+*/
+
 #define CACHE_SIZE 10
 
 const unsigned int PAGE_SIZE = 4096;

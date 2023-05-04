@@ -1,5 +1,11 @@
 #pragma once
 
+/**
+    This BTree implementation is deprecated. It is entirely out-of-memory with a fixed cache, meaning that at maximum, 20 blocks of 4 KB data will be in memory at a time when working with the databases. With large databases, there can be a lot of thrasing, which makes this implementation very slow with large amounts of writes/reads to deal with cache misses and writebacks for dirty cache blocks.
+
+    See btree_db_v2 for a more performant version of the BTree database.
+*/
+
 #include <string>
 #include <fstream>
 #include <array>
@@ -12,32 +18,21 @@
 #include <exception>
 #include <cstring>
 #include <vector>
-#include <sys/mman.h>
 
 #define CACHE_SIZE 64
-#define ORDER 337
+#define ORDER 337 
 #define PAGE_SIZE 4096
 
 #define KEYENTRY_SIZE 12
 #define HEADER_SIZE 16
-// #define ENTRY_SIZE 44
 
 #define DEFAULT_VAL 0
 
-// const unsigned int ENTRIES_PER_PAGE = PAGE_SIZE / ENTRY_SIZE - 1;
 
 enum FileType {
     Key,
     Value
 };
-
-/**
-    This struct details how values are stored in the values database.
-*/
-// struct ValueEntry {
-//     std::array<char, 40> name;
-//     int temp;
-// };
 
 template <typename T>
 class BTreeDB {
@@ -65,7 +60,7 @@ class BTreeDB {
         std::hash<unsigned int> h;
 
         /**
-            A cache set is a pair of cache block with an lru bit.
+            A cache set is a pair of cache block (2-way associativity) with an lru bit.
         */
         typedef std::pair<std::array<CacheBlock, 2>, bool> CacheSet;
 
@@ -76,8 +71,6 @@ class BTreeDB {
             unsigned int num_cells;
             char node_type;
             char is_root;
-            // unsigned int parent_ptr;
-            // unsigned int next_ptr;
         };
 
         /**
@@ -131,6 +124,7 @@ class BTreeDB {
 
             @param key_filename The filename for the key database
             @param values_filename The filename for the value database
+            @param create_new Whether new db files should be created (overwriting any old ones with the same name)
         */
         BTreeDB(const std::string& key_filename, const std::string& values_filename, bool create_new=false);
 
@@ -154,6 +148,12 @@ class BTreeDB {
         */
         T find(long key);
 
+        /**
+            Retrieves an id from the database according to an implemented operator== function for the template struct. For authors, it searches for a name, and for papers, it searches for a paper title.
+
+            @param search_val A struct that at minimum has the members needed for its operator== function to work.
+            @return the id of the struct that matches the search val if found, -1 if not
+        */
         long get_id_from_name(const T& search_val);
 
     private:
@@ -161,7 +161,7 @@ class BTreeDB {
         /**
             This class is a wrapper for working with individual key pages. Supports both reading data and writing data to the key page.
 
-            NOTE: For a given page number, only one interface should ever exist in memory at once, or the interfaces will be out of sync. (TODO: possibly sync them, if needed)
+            NOTE: For a given page number, only one interface should ever exist in memory at once, or the interfaces will be out of sync.
         */
         class KeyPageInterface {
             public:
@@ -227,19 +227,6 @@ class BTreeDB {
                 */
                 void set_child_ptr(unsigned int target, unsigned int entry_num);
 
-                // /**
-                //     Returns the parent pointer of the current page. 
-
-                //     @return parent pointer (bucket number) of parent; UINT_MAX if null
-                // */
-                // unsigned int get_parent_ptr() const;
-                // /**
-                //     Sets the parent pointer of the current page to a given value.
-
-                //     @param x The parent pointer (page number) to set
-                // */
-                // void set_parent_ptr(unsigned int x);
-
                 /**
                     Returns the nth key of the current page.
 
@@ -253,19 +240,6 @@ class BTreeDB {
                     @return the page number this interface refers to; UINT_MAX if null
                 */
                 unsigned int get_page_num() const;
-
-                // /**
-                //     Returns the next pointer of this page
-
-                //     @return next pointer (page number), UINT_MAX if null
-                // */
-                // unsigned int get_next_ptr() const;
-                // /**
-                //     Set the next pointer of this page
-
-                //     @param ptr pointer (page number) to set this page's next pointer to
-                // */
-                // void set_next_ptr(unsigned int ptr);
 
                 /**
                     Pushes a new key/child_ptr key pair in sorted order.
@@ -292,14 +266,20 @@ class BTreeDB {
                 unsigned int find_pos(long key) const;
 
                  /**
-                    Splits a key page according to the BTree logic. Should only be called on a full key page. 
+                    Splits this interface's keypage according to the BTree logic. This page should not have a parent. Should only be called on a full key page. 
 
-                    Splits the latter half of the keys to a new key page and pushes the middle key to the parent. If there is no parent, creates a new parent key page.
-
-                    @param iter An interface to the key page to split
+                    Splits the latter half of the keys to a new key page and creates a new parent page to store the middle key.
                 */
                 void split_page();
 
+
+                /**
+                    Splits a key page according to the BTree logic. Should only be called on a full key page. This page should have a parent.
+
+                    Splits the latter half of the keys to a new key page and pushes the middle key to the parent. 
+
+                    @param parent An interface to the parent of the key page that is being split.
+                */
                 void split_page(KeyPageInterface& parent);
 
             private:
@@ -434,35 +414,6 @@ class BTreeDB {
             @return the character array representing the page's binary data
         */
         char* get_page(unsigned int page_num, FileType type);
-
-        /**
-            Helper function to convert a valueentry to its binary character array representation.
-
-            @param source Valueentry to convert to binary
-            @param dest The character pointer to write the binary data to
-        // */
-        // void serialize_value(const T* const source, char* dest) const;
-        // /**
-        //     Helper function to convert binary data to a human readable ValueEntry
-
-        //     @param source The source pointer to read binary data from
-        //     @param dest The ValueEntry pointer to write to
-        // */
-        // void deserialize_value(const char* const source, ValueEntry* dest) const;
-
-        // void serialize_header(Header* source, char* dest) {
-        //     memcpy(dest, &(source->num_cells), 4);
-        //     memcpy(dest + 4, &(source->node_type), 1);
-        //     memcpy(dest + 5, &(source->is_root), 1);
-        //     memcpy(dest + 8, &(source->parent_ptr), 4);
-        // }
-
-        // void deserialize_header(char* source, Header* dest) {
-        //     memcpy(&(dest->num_cells), source, 4);
-        //     memcpy(&(dest->node_type), source + 4, 1);
-        //     memcpy(&(dest->is_root), source + 5, 1);
-        //     memcpy(&(dest->parent_ptr), source + 8, 4);
-        // }
 };
 
 template <typename T>
@@ -477,18 +428,6 @@ BTreeDB<T>::BTreeDB(const std::string& key_filename, const std::string& values_f
         fs_keys.open(key_filename, std::ios::binary | std::ios::in | std::ios::out | std::ios::trunc);
         fs_values.open(values_filename, std::ios::binary | std::ios::in | std::ios::out | std::ios::trunc);
         fs_meta.open(metadata_file, std::ios::binary | std::ios::in | std::ios::out | std::ios::trunc);
-
-        // uint64_t size = 2 * 1000 *1000 * 1000;
-        // std::vector<char> data;
-        // data.reserve(size);
-
-        // for (int i = 0; i < size; ++i)
-        // {
-        //     data.push_back('a');
-        // }
-
-        // fs_values.write(data.data(), size);
-        // num_value_pages = 262144;
 
         num_entries = num_key_pages = key_root = num_value_pages = 0;
     } else {
@@ -696,17 +635,6 @@ void BTreeDB<T>::KeyPageInterface::set_root(bool x) {
     handle_set();
 }
 
-// unsigned int BTreeDB::KeyPageInterface::get_parent_ptr() const {
-//     unsigned int res;
-//     memcpy(&res, get_data() + 8, 4);
-//     return res;
-// }
-
-// void BTreeDB::KeyPageInterface::set_parent_ptr(unsigned int x) {
-//     memcpy(get_data() + 8, &x, 4);
-//     handle_set();
-// }
-
 template <typename T>
 long BTreeDB<T>::KeyPageInterface::get_key(unsigned int entry_num) const {
     if (entry_num >= get_size()) {
@@ -804,17 +732,6 @@ void BTreeDB<T>::KeyPageInterface::set_child_ptr(unsigned int target, unsigned i
     memcpy(curr, &target, 4);
     handle_set();
 }
-
-// unsigned int BTreeDB::KeyPageInterface::get_next_ptr() const {
-//     unsigned int res;
-//     memcpy(&res, get_data() + 12, 4);
-//     return res;
-// }
-
-// void BTreeDB::KeyPageInterface::set_next_ptr(unsigned int ptr) {
-//     memcpy(get_data() + 12, &ptr, 4);
-//     handle_set();
-// }
 
 template <typename T>
 void BTreeDB<T>::KeyPageInterface::move_keys(KeyPageInterface& other) {
@@ -992,8 +909,6 @@ typename BTreeDB<T>::KeyPageInterface BTreeDB<T>::create_new_keypage(unsigned in
     curr.set_size(num_cells);
     curr.set_internal(internal);
     curr.set_root(is_root);
-    // curr.set_next_ptr(next_ptr);
-    // curr.set_parent_ptr(parent_ptr);
 
     return curr;
 }
@@ -1135,16 +1050,6 @@ char* BTreeDB<T>::get_page(unsigned int page_num, FileType type) {
 
     return block.page.data();
 }
-
-// void BTreeDB::serialize_value(const ValueEntry* const source, char* dest) const {
-//     memcpy(dest, source->name.data(), 40);
-//     memcpy(dest + 40, &(source->temp), 4);
-// }
-
-// void BTreeDB::deserialize_value(const char* const source, ValueEntry* dest) const {
-//     memcpy(dest->name.data(), source, 40);
-//     memcpy(&(dest->temp), source + 40, 4);
-// }
 
 template <typename T>
 long BTreeDB<T>::get_id_from_name(const T& search_val) {

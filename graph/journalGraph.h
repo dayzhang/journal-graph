@@ -30,4 +30,6 @@ public:
 
     void export_to_file(const std::string& filename);
 
+    const std::unordered_set<unsigned int>& get_neighbors(unsigned int node) const ;
+
 };
