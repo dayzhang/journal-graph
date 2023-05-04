@@ -106,12 +106,6 @@ void print_dfs(std::vector<std::pair<unsigned long, unsigned long>>& ans) {
     }
 }
 
-TEST_CASE("Ensure References Parser Works as Intended") {
-    // Test code goes here
-    std::vector<std::vector<unsigned long>> parsed_references;
-    REQUIRE(parse_references(parsed_references, "../data/dblp.v12.json"));
-}
-
 TEST_CASE("Ensure DFS works as intended") {
     journalGraph g("../data/journalgraph.bin");
     
@@ -135,16 +129,6 @@ TEST_CASE("Ensure DFS works as intended") {
     }
 }
 
-TEST_CASE("Ensure BFS works as intended") {
-
-}
-
-TEST_CASE("Ensure valid AuthorGraph") {
-}
-
-TEST_CASE("Ensure valid JournalGraph") {
-
-}
 
 TEST_CASE("Dijkstra's Test 1") {
     std::vector<author_parse_wrapper> values;

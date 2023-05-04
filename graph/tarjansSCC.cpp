@@ -41,7 +41,13 @@ std::vector<std::vector<unsigned long>> AuthorGraph::findSCC(std::unordered_map<
     return all_SCCs;
 }
 
+const int max_recursion = 128;
+
 void AuthorGraph::tarjansSearch(std::vector<std::vector<unsigned long>>& ans, const unsigned long& current_id, std::unordered_map<unsigned long, tarjans_t>& tarjans_data, std::stack<unsigned long>& scc_stack, int& id) {
+
+    if (ans.size() > max_recursion) {
+        return;
+    }
 
     bool& _on_stack = tarjans_data[current_id].on_stack;
     int& _low_link = tarjans_data[current_id].low_link;
@@ -65,15 +71,19 @@ void AuthorGraph::tarjansSearch(std::vector<std::vector<unsigned long>>& ans, co
     if (_disc == _low_link) {
         std::vector<unsigned long> strongly_connected;
 
-        while (scc_stack.top() != current_id) { //while the stack is not at ID
+        while (!scc_stack.empty() && scc_stack.top() != current_id) { //while the stack is not at ID
             node = scc_stack.top();
             strongly_connected.push_back(node);
             tarjans_data[node].on_stack = false;
             scc_stack.pop();
         }
-        strongly_connected.push_back(current_id);
-        _on_stack = false;
-        scc_stack.pop();
+        if (!scc_stack.empty()) {
+            strongly_connected.push_back(current_id);
+            _on_stack = false;
+            scc_stack.pop();
+        } else {
+            std::cout << "Done" << "\n";
+        }
         if (strongly_connected.size() > 1) {
             ans.push_back(strongly_connected);
         }
