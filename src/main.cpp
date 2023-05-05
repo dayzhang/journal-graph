@@ -68,21 +68,56 @@ void run_tarjans(BTreeDB<author::Entry>& db, AuthorGraph& g) {
         }
     }
     std::cout << "Returning to start" << "\n";
+}
 
+void run_dijkstras(BTreeDB<author::Entry>& db, AuthorGraph& g) {
+
+    while (true) {
+        std::cout << "Please enter an author id: ";
+        unsigned long source;
+        std::cin >> source;
+        std::cout << "\n" << "Please enter a destination: ";
+        unsigned long destination;
+        std::cin >> destination;
+        try {
+            author::Entry entry = db.find(source);
+
+            std::cout << "You entered the source id for: " << std::string(entry.name.data()) << "\n";
+
+            std::vector<unsigned long> ans = g.dijkstrasShortestPath(source, destination);
+
+            if (ans.size() > 0) {
+                std::cout << "Shortest Path | ";
+                for (auto& i : ans) {
+                    author::Entry src = db.find(i);  
+                    std::cout << std::string(src.name.data()) << " - ";
+                }
+                break;
+            } else {
+                break;
+            }
+        } catch (exception& e) {
+            std::cout << "Failed to convert to unsigned long" << "\n";
+            std::cout << e.what() << "\n";
+        }
+    }
+    std::cout << "Returning to start" << "\n";
 }
 
 void run_authors_graph(std::string& algorithm, AuthorGraph& g) {
     std::cout << "Initializing author database" << "\n";
     BTreeDB<author::Entry> db("author_keys.db", "author_values.db", false, true);
-
     std::cout << "Running " << algorithm << " algorithm on Authors graph" << std::endl;
 
-    std::string algo;
     while (true) {
+        std::cout << "enter q to exit\n";
+        if (algorithm == "q") {
+            return;
+        }
         if (algorithm == "Tarjans") {
             run_tarjans(db, g);
         } else if (algorithm == "Dijkstras") {
-
+            run_dijkstras(db, g);
         } else {
             std::cout << "Invalid algorithm. Please enter \"Tarjans\" or \"Dijkstras\"" << "\n";
             std::cin >> algorithm;
@@ -100,7 +135,9 @@ void print_dfs_ids_to_names_proxy(BTreeDB<paper::Entry>& db, const std::vector<s
     std::cout << "starting from " << std::string(first.title.data()) << ", it references: ";
 
     for (auto& pair : ids) {
-        std::cout << pair.first << " -> " << pair.second << "\n";
+        paper::Entry source = db.find(pair.first);
+        paper::Entry dest = db.find(pair.second);
+        std::cout << std::string(source.title.data()) << " -> " << std::string(dest.title.data()) << "\n";
     }
 
     return;
@@ -163,12 +200,11 @@ int main(int argc, char* argv[]) {
 
         journalGraph g("journalgraph.bin");
         
-        while (true) {
-            run_journals_graph(g);
-        }
+        run_journals_graph(g);
+        
     } else {
         std::cerr << "Invalid graph name. Available options: Authors, Journals" << std::endl;
-        return 1;
+        return exit_failure;
     }
 
     std::cout << "Thank you for using journal graph!" << "\n";
