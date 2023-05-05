@@ -64,26 +64,31 @@ bool verify_valid_parsed_data(std::vector<std::vector<std::string>>& parsed_refe
 TEST_CASE("Ensure References Parser Works as Intended") {
     // Test code goes here
     std::vector<std::vector<unsigned long>> parsed_references;
-    REQUIRE(parse_references(parsed_references, "../data/dblp.v12.json"));
+    REQUIRE(parse_references(parsed_references, "../data/dblp_subset.v12.json"));
 }
 
-TEST_CASE("Ensure Author Parser works as intended") {
-
-}
 
 TEST_CASE("Ensure DFS works as intended") {
+    journalGraph g("journalgraph.bin");
+    
+    std::vector<std::pair<unsigned int, unsigned int>> ans = g.getIdeaHistory(2036110521);
 
-}
+    for (auto& pair : ans) {
+        std::cout << pair.first << " -> " << pair.second << " -> ";
+    }
+    std::cout << "\n";
+    REQUIRE(ans.size() == 511);
 
-TEST_CASE("Ensure BFS works as intended") {
+    for (auto& p : ans) {
+        if (p.first <= 1) {
+            REQUIRE(p.second == 2036110521);
+        }
+    }
 
-}
-
-TEST_CASE("Ensure valid AuthorGraph") {
-}
-
-TEST_CASE("Ensure valid JournalGraph") {
-
+    //Asserts that it is an actual path and not some mumbo jumbo
+    for (size_t i = 0; i < ans.size() - 1; i++) {
+        REQUIRE(ans[i].second == ans[i + 1].first);
+    }
 }
 
 TEST_CASE("Dijkstra's Test 1") {
@@ -361,7 +366,7 @@ unsigned long& beginning, std::vector<unsigned long>& component, unsigned long& 
 }
 
 TEST_CASE("TarjansTestFull") {
-    AuthorGraph g("../../build/author_graph.bin");
+    AuthorGraph g("author_graph.bin");
     std::vector<std::vector<unsigned long>> scc = g.tarjansSCC_with_query(2569299913);
     auto& graph = g.getGraph();
     unsigned long start = 2569299913;

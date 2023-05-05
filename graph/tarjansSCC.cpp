@@ -41,7 +41,13 @@ std::vector<std::vector<unsigned long>> AuthorGraph::findSCC(std::unordered_map<
     return all_SCCs;
 }
 
+const int maximum_recursion = 1024;
+
 void AuthorGraph::tarjansSearch(std::vector<std::vector<unsigned long>>& ans, const unsigned long& current_id, std::unordered_map<unsigned long, tarjans_t>& tarjans_data, std::stack<unsigned long>& scc_stack, int& id) {
+
+    if (id > 1024) {
+        return;
+    }
 
     bool& _on_stack = tarjans_data[current_id].on_stack;
     int& _low_link = tarjans_data[current_id].low_link;

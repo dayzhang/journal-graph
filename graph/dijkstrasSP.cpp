@@ -41,8 +41,12 @@ std::vector<unsigned long> AuthorGraph::dijkstrasShortestPath(const unsigned lon
             flag = false;
         }
         if (previous.find(cur.second) == previous.end()) {
-            for (auto other : adj_list.at(cur.second)) {
-                queue.push(std::pair<unsigned long, unsigned long>(cur.second, other.first));
+            if (adj_list.find(cur.second) != adj_list.end()) {
+                for (auto other : adj_list.at(cur.second)) {
+                    queue.push(std::pair<unsigned long, unsigned long>(cur.second, other.first));
+                }
+            } else {
+                break;
             }
         }
         if (distance.at(cur.first) + static_cast<double>(1 / adj_list[cur.first][cur.second]) < distance.at(cur.second)) {
