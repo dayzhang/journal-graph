@@ -1,58 +1,49 @@
 # Aminer Citation Network Analysis Tool
 
-The full data can be found at https://www.aminer.org/citation with the link to download the DBLP-Citation-network V12. A small subset can also be found in the data folder to run on with the name dblp_subset.v12.json. 
+### Locations of main components
+
+The full data used in this project can be found at https://www.aminer.org/citation with the link to download the DBLP-Citation-network V12. 
 
 The contents of each of the folders in the repository are as follows:
 
 - catch_tests: this contains the code to test our deliverables
-- data: this is where the DBLP json data should go
-- dataset: the code here is used for graph testing purposes
+- data: this is where the DBLP json data should be placed
+- dataset: the code here contained here is used for graph/algorithm testing purposes
 - graph: here is where the code for our graph implementations and algorithms are located
 - lib: this where simdjson, the third party library we used to parse jsons (https://github.com/simdjson/simdjson), is located
-- parsing: this is where the full code for parsing the entirety of the DBLP data is found
+- parsing: this is where the full code for parse the input data (this is specific to the DBLP v12 dataset)
 - src: this is where the code for what the user runs is found
 - storage: the code for our data storage is located here (as well as some previous iterations of the current, v2 BTree database)
 
+The main results can be found in the results.md markdown file also contained within this repository. 
 
+### Build instructions
 
+To run this code, clone this repository (git clone https://github.com/dayzhang/journal-graph.git) into the CS225 docker container and run the following:
 
+```
+mkdir build
+cd build
+cmake ..
+```
 
-A functional code-base. Your code must either work on the default docker container or with special arrangements with your mentor in a system that you agreed on. It will be tested for reproducibility of your original results and it’s capacity to run on datasets of our choosing that exactly match your proposed formatting. Your code will be graded based on the following metrics:
+After doing this, you can then run ```make``` to build all the code. At this point, there are a few main things that can be run.
 
-    Code Execution – How easy is it to run your code? For full credit, your code should be runnable using simple command line arguments, which include the ability to alter or adjust the input data or output location.
-
-    Code Efficiency – Does your code match your target Big O efficiencies? For full credit, your code should have no obvious inefficiency in implementation and be capable of running to completion on your proposed dataset using reasonable hardware resources.
-
-    Code Organization – Is your code human-readable? For full credit, all your variables, functions, and classes should be named appropriately and organized comments should detail the input, output, and intended behavior of major code blocks. Additionally, your final submission should be devoid of unnecessary or obsolete code.
-
-    Code Completion – Have you completed all your algorithms? For full credit, your code must be able to run all the proposed algorithms on the full dataset and have tests proving that the algorithms worked.
-
-A descriptive README. In addition to the code itself, you must include a human-readable README.md which describes:
-
-    Github Organization – You should describe the physical location of all major files and deliverables (code, tests, data, the written report, the presentation video, etc…)
-
-    Running Instructions – You should provide full instructions on how to build and run your executable, including how to define the input data and output location for each method. You should also have instructions on how to build and run your test suite, including a general description on what tests you have created. It is in your best interest to make the instructions (and the running of your executables and tests) as simple and straightforward as possible.
-
-A written report. In addition to your code, your Github repository must contain a results.md file which describes:
-
-    The output and correctness of each algorithm – You should summarize, visualize, or highlight some part of the full-scale run of each algorithm. Additionally, the report should briefly describe what tests you performed to confirm that each algorithm was working as intended.
-
-    The answer to your leading question – You should direct address your proposed leading question. How did you answer this question? What did you discover? If your project was ultimately unsuccessful, give a brief reflection about what worked and what you would do differently as a team.
-
-A final presentation. In addition to your project write-up, you should submit a short video (10 minutes or less) describing your project. Your presentation should include slides or other visual aids and include the following content:
-
-    Your Goals (Suggested time: 1-2 minutes) The presentation should begin with a summary of your proposed goals and a short statement about what you successfully accomplished and, if necessary, what you were ultimately unable to complete.
-
-    Tip: Think of this as ‘setting the stage’ for your presentation, letting the viewer know what you will be discussing for the rest of the talk.
-
-    Your Development (Suggested time: 2-3 minutes) The presentation should include a high level overview of the work you put into the presentation. This is not meant to be a line by line recounting of your code but a highlight reel of the various design decisions you made and the challenges you encountered – and hopefully overcame – while working on the project.
-
-    If you were unable to complete one of your goals, this is the best opportunity to explain what you did that didn’t work out, how you tried to address the problem, and what you might do in the future if you were tasked to do this or a similar project again.
-
-    Tip: If you are struggling to identify content here, ask yourself questions like: “How did we get the data we wanted?”, “How did we choose our implementation strategy for an algorithm?”, “How did we ultimately test our code to ensure that it is working?”
-
-    Your Conclusions (Suggested time: 3-5 minutes) The presentation should end by answering the ‘leading question’ you were hoping to solve. This may include details such as the final or full-scale input dataset you used and the output of each of your algorithms but ambitious teams should focus on how these results led you to discover something interesting involving your real-world dataset. For example, a traversal algorithm on OpenFlights data may be used to identify the shortest path between two airports that your team would like to visit.
-
-In addition to quantitative results, your conclusions should also end with some individual thoughts you had about the project. What did you learn, what did you like or didn’t like, and what would you explore or implement next if given more time?
-
-To submit your final project video, you may either include it on Github or include a direct link to the video on your team Github. Videos can be hosted through Zoom cloud recordings, Youtube, Google drive, etc…
+- ./parse [path to the dblp json relative to the build folder]
+    - This reads in and parses the DBLP data in two passes to construct the database and graph binary files, which are deposited into the build folder under the names author_keys.db, author_values.db, paper_keys.db, paper_values.db, author_graph.bin, and journalgraph.bin. 
+    - This function is relatively intensive, so an alternative to running this is to download these things pre-generated at the following link: https://drive.google.com/file/d/1xvQGafQpwJB5L4UMroDryvZWvToigL75/view?usp=share_link
+    - This is an archive file, and its contents should be directly placed into the build folder for the other functions to read.
+- ./db_interface [key db filename, default *_keys.db] [value db filename, default *_values.db] [type of database (test, paper, or author)] [whether or not to create a new db (0 for no, 1 for yes)] [read only setting [0 for no, 1 for yes]]
+    - This provides an interface to browse and query the database from the B+ Tree structure stored in the .db files. It is generally recommended to be read only/not to create a new db when working with the key/value db files to prevent data corruption, but this can be ignored if you are just making a dummy database for testing (which the test type is suited for). 
+    - The commands available in this are explained in the actual code.
+    - Fun queries include "G. Carl Evans" and "Brad Solomon" in the author database. These ids can then be used to find their publications in the paper database.
+- ./paper_game [start paper id (try 1091 if you don't have a specific one)]
+    - This provides an interface to browse and explore the paper database, navigating only via neighbors. 
+    - The commands for this are also found within the CLI once the code is run.
+- ./main (arguments)
+    - TODO: fill this in
+- ./dijkstras/tarjans (arguemnts)
+    - TODO: fill this in
+- ./run_tests
+    - This runs the tests we created to test our deliverables.
+    - If valgrind is used, this may take a bit. 

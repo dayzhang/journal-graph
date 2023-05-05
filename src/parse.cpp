@@ -14,11 +14,11 @@ using std::cin;
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         cout << "Invalid number of arguments passed." << endl;
-        cout << "Usage: ./parse [name of json file to parse]" << endl;
+        cout << "Usage: ./parse [path to dblp json file relative to the build folder]" << endl;
         return 0;
     }
 
-    cout << "Are you sure you want to parse the data? It will take around half an hour with the full dataset and will wipe any any existing db and graph files." << endl;
+    cout << "Are you sure you want to parse the data? It will take around half an hour with the full dataset and will wipe any any existing db and graph files. It is also relatively intensive, requiring around 8GB of memory. An alternative is to simply download the built things from the provide google drivel ink" << endl;
     cout << "Type y if you want to proceed." << endl;
     
     std::string input;
