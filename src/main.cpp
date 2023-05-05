@@ -53,7 +53,11 @@ void run_tarjans(BTreeDB<author::Entry>& db, AuthorGraph& g) {
 
     std::string query;
     while (true) {
-        std::cout << "Please enter an author id: ";
+        std::cout << "Please enter an author id. Recommended ones are:\n";
+        std::cout << "include \"G. Carl Evans\" (id 2109906170), \"Brad Solomon\" (id 2189947603), \"Geoffrey Challen\" (id 2231335109), \"Michael Nowak\" (id 2688443206), \"Geoffrey L. Herman\" (id 2148163125), and \"Lawrence Angrave\" (id 2645015366) in the author database.\n";
+        std::cout << "\n";
+
+        std::cout << ">>";
         std::cin >> query;
 
         try {
@@ -107,8 +111,7 @@ void run_dijkstras(BTreeDB<author::Entry>& db, AuthorGraph& g) {
                 break;
             }
         } catch (exception& e) {
-            std::cout << "Failed to convert to unsigned long" << "\n";
-            std::cout << e.what() << "\n";
+            std::cout << e.what() << "\n\n";
         }
     }
     std::cout << "Returning to start" << "\n";
@@ -120,21 +123,19 @@ void run_authors_graph(AuthorGraph& g) {
 
     std::string algorithm;
     while (true) {
-        std::cout << "Enter and algorithm (Tarjans or Dijkstras). Alternatively, enter q to exit\n";
+        std::cout << "Enter and algorithm (Tarjans or Dijkstras).\n";
         
         std::cin >> algorithm;
 
         std::cout << "Running " << algorithm << " algorithm on Authors graph" << std::endl;
-        if (algorithm == "q") {
-            return;
-        }
         if (algorithm == "Tarjans") {
             run_tarjans(db, g);
+            break;
         } else if (algorithm == "Dijkstras") {
             run_dijkstras(db, g);
+            break;
         } else {
             std::cout << "Invalid algorithm. Please enter \"Tarjans\" or \"Dijkstras\"" << "\n";
-            std::cin >> algorithm;
         }
         
     }
@@ -162,7 +163,7 @@ void run_journals_graph(journalGraph& graph) {
     BTreeDB<paper::Entry> db("paper_keys.db", "paper_values.db", false, true);
     
     std::string paper_id;
-
+    std::cout << "\nRecommended ID: 162256\n";
     std::cout << "Please enter a paper ID: ";
     std::cin >> paper_id;
 
@@ -186,13 +187,14 @@ void run_journals_graph(journalGraph& graph) {
 
 
 int main(int argc, char* argv[]) {
-    
+    std::cout << "--------------------------------------------------------------------\n";
     std::cout << "Journal Graph by Daniel Zhang, Ian Zhang, Jenny Hu, and Kevin Chen" << "\n";
-    std::cout << "Welcome! To run the program, start by entering either \"Journals\" or \"Authors\" on the CLI when executing\n";
-    
+    std::cout << "\nWelcome! To run the program, start by entering either \"Journals\" or \"Authors\" on the CLI when executing\n\n";
+
+    std::cout << "*Note, not all papers in the database are available in the graph due to parsing\n";    
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " [\"Journals\" or \"Authors\"]" << std::endl;
-        return 1;
+        return exit_failure;
     }
 
     std::string graph = argv[1];
@@ -203,22 +205,54 @@ int main(int argc, char* argv[]) {
 
         AuthorGraph g("author_graph.bin");
 
-        run_authors_graph(g);
+        while (true) {
+            std::cout << "Type r to run, q to quit" << std::endl;
+            std::cout << std::endl;
+            std::string go;
+            cin >> go;
+
+            if (go == "r") {
+
+                run_authors_graph(g);
+
+            } else if (go == "q") {
+                break;
+            } else {
+                std::cout << "Unknown Input \n";
+            }
+
+            std::cout << std::endl;
+        }
 
     } else if (graph == "Journals") {
 
-        std::cout << "Initializing a Journal Graph... \n";
+        std::cout << "Initializing an Journal Graph... \n";
 
         journalGraph g("journalgraph.bin");
-        
-        run_journals_graph(g);
+
+        while (true) {
+            std::cout << "Type r to run, q to quit" << "\n";
+            std::string go;
+            cin >> go;
+
+            if (go == "r") {
+
+                run_journals_graph(g);
+
+            } else if (go == "q") {
+                break;
+            } else {
+                std::cout << "\nUnknown Input\n";
+            }
+            std::cout << std::endl;
+        }
         
     } else {
         std::cerr << "Invalid graph name. Available options: Authors, Journals" << std::endl;
         return exit_failure;
     }
 
-    std::cout << "Thank you for using journal graph!" << "\n";
+    std::cout << "\nThank you for using journal graph!\n" << "\n";
 
     return exit_success;
 }

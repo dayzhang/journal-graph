@@ -29,7 +29,6 @@ journalGraph::journalGraph(const std::vector<std::vector<unsigned int>>& node_da
             }
         }
     }
-    
 }
 
 struct traversal_element {
@@ -143,6 +142,14 @@ journalGraph::journalGraph(const std::string& filename) {
     }
 
     ifs.close();
+}
+
+journalGraph::journalGraph() {
+    journalGraph("journalgraph.bin");
+}
+
+journalGraph::~journalGraph() {
+    std::cout << "\nClosing the Journal Graph \n";
 }
 
 const std::unordered_set<unsigned int>& journalGraph::get_neighbors(unsigned int node) const {

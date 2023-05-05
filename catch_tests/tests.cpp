@@ -8,6 +8,7 @@
 #include "../storage/btree_db_v2.hpp"
 #include "../storage/btree_types.cpp"
 #include "../graph/dijkstrasSP.cpp"
+#include "time.h"
 
 #include <algorithm>
 #include <unordered_set>
@@ -67,29 +68,54 @@ TEST_CASE("Ensure References Parser Works as Intended") {
     REQUIRE(parse_references(parsed_references, "../data/dblp_subset.v12.json"));
 }
 
-
+std::vector<unsigned long> id_collection = {237528, 233935, 226082, 225523, 215653, 193810, 17684, 11779};
 TEST_CASE("Ensure DFS works as intended") {
     journalGraph g("journalgraph.bin");
-    
-    std::vector<std::pair<unsigned int, unsigned int>> ans = g.getIdeaHistory(2036110521);
+    {
+        std::vector<std::pair<unsigned int, unsigned int>> ans = g.getIdeaHistory(2036110521);
 
-    for (auto& pair : ans) {
-        std::cout << pair.first << " -> " << pair.second << " -> ";
-    }
-    std::cout << "\n";
-    REQUIRE(ans.size() == 511);
+        std::cout << "\n";
+        REQUIRE(ans.size() == 511);
 
-    for (auto& p : ans) {
-        if (p.first <= 1) {
-            REQUIRE(p.second == 2036110521);
+        for (auto& p : ans) {
+            if (p.first <= 1) {
+                REQUIRE(p.second == 2036110521);
+            }
+        }
+
+        //Asserts that it is an actual path and not some mumbo jumbo
+        for (size_t i = 0; i < ans.size() - 1; i++) {
+            REQUIRE(ans[i].second == ans[i + 1].first);
         }
     }
 
-    //Asserts that it is an actual path and not some mumbo jumbo
-    for (size_t i = 0; i < ans.size() - 1; i++) {
-        REQUIRE(ans[i].second == ans[i + 1].first);
+    {
+        //Testing random
+        srand(time(NULL));
+        int ind = rand() % id_collection.size();
+
+        std::vector<std::pair<unsigned int, unsigned int>> ans = g.getIdeaHistory(id_collection[ind]);
+
+        std::cout << "\n";
+        if (!ans.empty()) {
+            for (auto& p : ans) {
+                if (p.first <= 1) {
+                    REQUIRE(p.second == id_collection[ind]);
+                }
+            }
+
+            //Asserts that it is an actual path and not some mumbo jumbo
+            for (size_t i = 0; i < ans.size() - 1; i++) {
+                REQUIRE(ans[i].second == ans[i + 1].first);
+            }
+        }
     }
+
+
+    //random test
 }
+
+
 
 TEST_CASE("Dijkstra's Test 1") {
     std::vector<author_parse_wrapper> values;
@@ -311,13 +337,6 @@ TEST_CASE("TarjansTest 2") {
     AuthorGraph g(values);
     auto ans = g.tarjansSCC();
     g.print_graph();
-    for (auto& i : ans) {
-        std::cout << "Strongly Connected Component | ";
-        for (auto& entry : i) {
-            std::cout << entry << " - ";
-        }
-        std::cout << "\n";
-    }
     REQUIRE(ans.size() == 2); // 2 SCCS
     std::sort(ans.begin(), ans.end());
     for (auto& scc : ans) {

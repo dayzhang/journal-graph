@@ -135,3 +135,7 @@ AuthorGraph::AuthorGraph(const std::vector<author_parse_wrapper>& node_data) {
 
     num_nodes = adj_list.size();
 }   
+
+AuthorGraph::~AuthorGraph() {
+    std::cout << "\nClosing Author Graph\n";
+}
