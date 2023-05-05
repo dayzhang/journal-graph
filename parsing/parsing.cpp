@@ -220,7 +220,7 @@ void build_author_graph(const std::string& filename) {
 
     // iterate over all lines of json
     while(std::getline(ifs, line)) {
-        if (count % 10000 == 0) {
+        if (count % 100000 == 0) {
             std::cout << count << std::endl;
         }
 

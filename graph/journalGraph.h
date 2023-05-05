@@ -32,4 +32,6 @@ public:
 
     const std::unordered_set<unsigned int>& get_neighbors(unsigned int node) const ;
 
+    bool in_graph(unsigned int node) const;
+
 };

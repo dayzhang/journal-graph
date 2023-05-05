@@ -29,6 +29,8 @@
     The B+ Tree structure, as opposed to a classic BTree, allows for significantly more dense key nodes (order 337), as values are not stored with the keys, and this allows for less cache misses when searching/inserting. This does come at the cost of performance, though--the best case (having value at the root) is worse, and there is an extra cache miss added to the end of each operation.
 
     This is a somewhat simplified implementation of a B+ Tree, only supporting the find and insert operations, as we did not require a deletion functionality. 
+
+    The main difference between v2 and v1 is the addition of an infinite cache implemented via a hash-based dictionary, which reduces thrashing significantly at the tradeoff of unbounded memory usage. 
 */
 
 /**
@@ -163,7 +165,10 @@ class BTreeDB {
         long get_id_from_name(const T& search_val);
 
         /**
+            This function gets all the papers associated with a provided author id. This takes a while to run, and it is only defined when working with the paper database (opening with other types will cause an exception to be thrown if this function is called).
 
+            @param author_id The author to search for papers for
+            @return A list of paper ids that the author is an author on (up to 8th coauthor)
         */
         std::vector<long> get_papers(long author_id);
 

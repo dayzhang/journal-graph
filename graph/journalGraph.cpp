@@ -151,3 +151,7 @@ const std::unordered_set<unsigned int>& journalGraph::get_neighbors(unsigned int
     }
     return graph.at(node);
 }
+
+bool journalGraph::in_graph(unsigned int node) const {
+    return graph.find(node) != graph.end();
+}

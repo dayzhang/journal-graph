@@ -34,6 +34,7 @@ int main(int argc, char* argv[]) {
 
     cout << "DO NOT ctrl + C to exit the prompt if you are not in read only mode; only use the quit command to prevent data corruption." << endl;
     cout << "If a key/value file opening error is thrown, try running parse first or download the data directly." << endl;
+    cout << "A stoi/stol error may be thrown if you input a non-numerical value when prompted for one." << endl;
 
     std::string temp;
 

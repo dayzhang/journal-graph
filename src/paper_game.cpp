@@ -15,21 +15,25 @@ using std::endl;
 using std::cin;
 
 int main(int argc, char* argv[]) {
-    if (argc != 2) {
+    if (argc != 5) {
         cout << "invalid number of arguments passed" << endl;
-        cout << "usage: ./paper_game [start paper (try 1091 if you don't have a specific one)]" << endl;
+        cout << "usage: ./paper_game [paper graph binary file (journalgraph.bin)] [paper keys db file (paper_keys.db)] [paper values db file (paper_values.db)] [start paper (try 1091 if you don't have a specific one)]" << endl;
+
+        return 0;
     }
 
     cout << "Initializing the journal graph from journalgraph.bin" << endl;
     cout << "If a key/value file opening error is thrown, try running parse first or download the data directly." << endl;
-    journalGraph g("journalgraph.bin");
+    journalGraph g(argv[1]);
 
     cout << "Initializing the paper database using the paper_keys.db and paper_values.db files" << endl;
-    BTreeDB<paper::Entry> db("paper_keys.db", "paper_values.db", false, true);
+    BTreeDB<paper::Entry> db(argv[2], argv[3], false, true);
 
     // TODO: get a random start id and a random end id (using BFS to find the smallest path and to ensure a solution is possible)
-    long curr = std::stol(argv[1]);
+    long curr = std::stol(argv[4]);
     int steps = 0;
+
+    std::string temp;
 
     while (true) {
         cout << "You are currently at paper " << curr << " and have taken " << steps << " steps." << endl;
@@ -37,18 +41,29 @@ int main(int argc, char* argv[]) {
         cout << ">> ";
 
         std::string input;
-        cin >> input;
+        std::getline(cin, input);
 
         if (input == "get_neighbors") {
             cout << "Neighbors: ";
             for (unsigned int neighbor : g.get_neighbors(curr)) {
-                cout << neighbor << ' ';
+                if (g.in_graph(neighbor)) {
+                    cout << neighbor << ' ';
+                }
             }
             cout << endl;
         } else if (input == "query") {
             cout << "Which paper id do you want to query?" << endl;
+            
+            std::getline(cin, temp);
             int query;
-            cin >> query;
+            try {
+                query = std::stoi(temp);
+            }
+            catch (const std::invalid_argument& err) {
+                cout << "Non-integer id inputted; please input a valid id" << endl;
+                continue;
+            }
+
 
             paper::Entry entry = db.find(query);
             if (entry.id == -1) {
@@ -62,8 +77,16 @@ int main(int argc, char* argv[]) {
             }
         } else if (input == "move") {
             cout << "Which paper would you like to move to?" << endl;
+
+            std::getline(cin, temp);
             int target;
-            cin >> target;
+            try {
+                target = std::stoi(temp);
+            }
+            catch (const std::invalid_argument& err) {
+                cout << "Non-integer id inputted; please input a valid id" << endl;
+                continue;
+            }
 
             if (g.get_neighbors(curr).find(target) == g.get_neighbors(curr).end()) {
                 cout << "Invalid paper specified -- please only move to ones specified in the get_neighbors function." << endl;
@@ -81,6 +104,5 @@ int main(int argc, char* argv[]) {
         } else {
             cout << "Invalid command. The available ones include get_neighbors, query, move, help, and quit." << endl;
         }
-        cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
 }
