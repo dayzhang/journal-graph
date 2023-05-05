@@ -15,7 +15,7 @@ The contents of each of the folders in the repository are as follows:
 - src: this is where the code for what the user runs is found
 - storage: the code for our data storage is located here (as well as some previous iterations of the current, v2 BTree database)
 
-The main results can be found in the results.md markdown file also contained within this repository. The video presentation can be found at (insert link here). 
+The main results can be found in the results.md markdown file also contained within this repository. The video presentation can be found at **(insert link here)**. 
 
 ### Build instructions
 
@@ -37,13 +37,13 @@ After doing this, you can then run ```make``` to build all the code. At this poi
     - This provides an interface to browse and query the database from the B+ Tree structure stored in the .db files. It is generally recommended to be read only/not to create a new db when working with the key/value db files to prevent data corruption, but this can be ignored if you are just making a dummy database for testing (which the test type is suited for). 
     - The commands available in this are explained in the actual code.
     - Fun queries include "G. Carl Evans" (id 2109906170), "Brad Solomon" (id 2189947603), "Geoffrey Challen" (id 2231335109), "Michael Nowak" (id 2688443206), "Geoffrey L. Herman" (id 2148163125), and "Lawrence Angrave" (id 2645015366) in the author database. 
-- ./paper_game [start paper id (try 1091 if you don't have a specific one)]
+- ./paper_game [paper graph binary (journalgraph.bin)] [paper key db file (paper_keys.db)] [paper values db file (paper_values.db)] [start paper id (try 1091 if you don't have a specific one)]
     - This provides an interface to browse and explore the paper database, navigating only via neighbors. 
     - The commands for this are also found within the CLI once the code is run.
 - ./main (arguments)
-    - TODO: fill this in
+    - **TODO**: fill this in
 - ./dijkstras/tarjans (arguemnts)
-    - TODO: fill this in
+    - **TODO**: fill this in
 - ./run_tests
     - This runs the tests we created to test our deliverables.
     - If valgrind is used, this may take a bit. 
