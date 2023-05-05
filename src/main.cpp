@@ -34,14 +34,32 @@ bool is_valid_paper_id(std::string paper_id, BTreeDB<paper::Entry>& db) {
     return false;
 }
 
-void run_tarjans(BTreeDB<author::Entry>& db, AuthorGraph& g) {
+void print_tarjans(std::vector<std::vector<unsigned long>>& ans, BTreeDB<author::Entry>& db) {
+    if (ans.size() > 0) {
+        for (auto& i : ans) {
+            std::cout << "Strongly Connected Component | ";
+            for (auto& entry : i) {
+                author::Entry name = db.find(entry);
+                std::cout << std::string(name.name.data()) << " - ";
+            }
+            std::cout << "\n";
+        }
+    } else {
+        std::cout << "No SCCs here" << "\n";
+    }
+}
 
-    std::cout << "Please enter an author id: ";
+void run_tarjans(BTreeDB<author::Entry>& db, AuthorGraph& g) {
 
     std::string query;
     while (true) {
+        std::cout << "Please enter an author id: ";
         std::cin >> query;
+
         try {
+            if (query == "q") {
+                return;
+            }
             unsigned long q = std::stoul(query);
 
             author::Entry entry = db.find(q);
@@ -50,18 +68,10 @@ void run_tarjans(BTreeDB<author::Entry>& db, AuthorGraph& g) {
 
             std::vector<std::vector<unsigned long>> ans = g.tarjansSCC_with_query(q);
 
-            if (ans.size() > 0) {
-                for (auto& i : ans) {
-                    std::cout << "Strongly Connected Component | ";
-                    for (auto& entry : i) {
-                        std::cout << entry << " - ";
-                    }
-                    std::cout << "\n";
-                }
-                break;
-            } else {
-                std::cout << "No SCCs here" << "\n";
-            }
+            print_tarjans(ans, db);
+
+            return;
+
         } catch (exception& e) {
             std::cout << "Failed to convert to unsigned long" << "\n";
             std::cout << e.what() << "\n";
@@ -104,13 +114,17 @@ void run_dijkstras(BTreeDB<author::Entry>& db, AuthorGraph& g) {
     std::cout << "Returning to start" << "\n";
 }
 
-void run_authors_graph(std::string& algorithm, AuthorGraph& g) {
+void run_authors_graph(AuthorGraph& g) {
     std::cout << "Initializing author database" << "\n";
     BTreeDB<author::Entry> db("author_keys.db", "author_values.db", false, true);
-    std::cout << "Running " << algorithm << " algorithm on Authors graph" << std::endl;
 
+    std::string algorithm;
     while (true) {
-        std::cout << "enter q to exit\n";
+        std::cout << "Enter and algorithm (Tarjans or Dijkstras). Alternatively, enter q to exit\n";
+        
+        std::cin >> algorithm;
+
+        std::cout << "Running " << algorithm << " algorithm on Authors graph" << std::endl;
         if (algorithm == "q") {
             return;
         }
@@ -122,6 +136,7 @@ void run_authors_graph(std::string& algorithm, AuthorGraph& g) {
             std::cout << "Invalid algorithm. Please enter \"Tarjans\" or \"Dijkstras\"" << "\n";
             std::cin >> algorithm;
         }
+        
     }
 }
 
@@ -188,11 +203,7 @@ int main(int argc, char* argv[]) {
 
         AuthorGraph g("author_graph.bin");
 
-        std::string algorithm;
-        std::cout << "Please choose an algorithm (Tarjans or Dijkstras): ";
-        std::cin >> algorithm;
-
-        run_authors_graph(algorithm, g);
+        run_authors_graph(g);
 
     } else if (graph == "Journals") {
 
