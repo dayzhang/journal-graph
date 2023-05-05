@@ -11,7 +11,7 @@ The contents of each of the folders in the repository are as follows:
 - dataset: the code here contained here is used for graph/algorithm testing purposes
 - graph: here is where the code for our graph implementations and graph algorithms are located
 - lib: this where simdjson, the third party library we used to parse jsons (https://github.com/simdjson/simdjson), is located
-- parsing: this is where the full code for parse the input data (this is specific to the DBLP v12 dataset)
+- parsing: this is where the full code for parse the input data (this is specifically geared towards the DBLP v12 dataset)
 - src: this is where the code for what the user runs is found
 - storage: the code for our data storage is located here (as well as some previous iterations of the current, v2 BTree database)
 
@@ -27,7 +27,7 @@ cd build
 cmake ..
 ```
 
-After doing this, you can then run ```make``` to build all the code. At this point, there are a few main things that can be run.
+After doing this, you can then run ```make``` to build all the code. At this point, there are a few things that can be run.
 
 - ./parse [path to the dblp json relative to the build folder]
     - This reads in and parses the DBLP data in two passes to construct the database and graph binary files, which are deposited into the build folder under the names author_keys.db, author_values.db, paper_keys.db, paper_values.db, author_graph.bin, and journalgraph.bin. 
@@ -37,6 +37,7 @@ After doing this, you can then run ```make``` to build all the code. At this poi
     - This provides an interface to browse and query the database from the B+ Tree structure stored in the .db files. It is generally recommended to be read only/not to create a new db when working with the key/value db files to prevent data corruption, but this can be ignored if you are just making a dummy database for testing (which the test type is suited for). 
     - The commands available in this are explained in the actual code.
     - Fun queries include "G. Carl Evans" (id 2109906170), "Brad Solomon" (id 2189947603), "Geoffrey Challen" (id 2231335109), "Michael Nowak" (id 2688443206), "Geoffrey L. Herman" (id 2148163125), and "Lawrence Angrave" (id 2645015366) in the author database. 
+    - The main functionality in this is the insert/find features; the other features are relatively slower as they bypass the BTree structure (although they get faster after repeated usage with more things loaded to memory). 
 - ./paper_game [paper graph binary (journalgraph.bin)] [paper key db file (paper_keys.db)] [paper values db file (paper_values.db)] [start paper id (try 1091 if you don't have a specific one)]
     - This provides an interface to browse and explore the paper database, navigating only via neighbors. 
     - The commands for this are also found within the CLI once the code is run.
