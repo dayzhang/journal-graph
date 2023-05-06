@@ -28,6 +28,16 @@ class journalGraph {
 
     size_t nodes_;
 
+private:
+
+/**
+ * Helper function for getIdeaHistory
+ * @param vertex current id
+ * @param seen seen set
+ * @param record a record of papers traversed so far
+*/
+    void dfs(const unsigned int& vertex, std::unordered_map<unsigned int, bool>& seen, std::vector<std::pair<unsigned int, unsigned int>>& record);
+
 public:
 /**
  * Default constructor is initialized with build/journalgraph.bin
@@ -65,14 +75,6 @@ public:
  * @return pairs of nodes connected from first to second
 */
     std::vector<std::pair<unsigned int, unsigned int>> getIdeaHistory(const unsigned int& source);
-
-/**
- * Helper function for getIdeaHistory
- * @param vertex current id
- * @param seen seen set
- * @param record a record of papers traversed so far
-*/
-    void dfs(const unsigned int& vertex, std::unordered_map<unsigned int, bool>& seen, std::vector<std::pair<unsigned int, unsigned int>>& record);
 
 /**
  * Prints graph. See implementation for details

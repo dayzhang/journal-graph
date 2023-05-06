@@ -43,6 +43,7 @@ After doing this, you can then run ```make``` to build all the code. At this poi
     - The commands for this are also found within the CLI once the code is run.
 - ./main [graph type (Journals or Authors)]
     - ./main is the main place the run algorithms on the Journals and Authors graphs
+    - Both Journals and Authors support options to run and quit.
     - The jounal option automatically runs DFS on a source node.
     - The authors option prompts the user for Tarjans and Dijkstra's, and runs each based on user input accordingly
 - ./run_tests
