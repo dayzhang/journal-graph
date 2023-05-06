@@ -5,6 +5,7 @@
 #include <string>
 #include <fstream>
 #include <exception>
+#include <cstdlib>
 
 #include "../storage/btree_db_v2.hpp"
 #include "../storage/btree_types.cpp"
@@ -55,9 +56,9 @@ int main(int argc, char* argv[]) {
             cout << "Which paper id do you want to query?" << endl;
             
             std::getline(cin, temp);
-            int query;
+            unsigned int query;
             try {
-                query = std::stoi(temp);
+                query = std::stoul(temp);
             }
             catch (const std::invalid_argument& err) {
                 cout << "Non-integer id inputted; please input a valid id" << endl;
@@ -79,9 +80,9 @@ int main(int argc, char* argv[]) {
             cout << "Which paper would you like to move to?" << endl;
 
             std::getline(cin, temp);
-            int target;
+            unsigned int target;
             try {
-                target = std::stoi(temp);
+                target = std::stoul(temp);
             }
             catch (const std::invalid_argument& err) {
                 cout << "Non-integer id inputted; please input a valid id" << endl;
