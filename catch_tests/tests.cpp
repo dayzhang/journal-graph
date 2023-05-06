@@ -62,6 +62,9 @@ bool verify_valid_parsed_data(std::vector<std::vector<std::string>>& parsed_refe
     //ensure no whitespace
 }
 
+/*
+Ensure parser works as intended
+*/
 TEST_CASE("Ensure References Parser Works as Intended") {
     // Test code goes here
     std::vector<std::vector<unsigned long>> parsed_references;
@@ -74,7 +77,6 @@ TEST_CASE("Ensure DFS works as intended") {
     {
         std::vector<std::pair<unsigned int, unsigned int>> ans = g.getIdeaHistory(2036110521);
 
-        std::cout << "\n";
         REQUIRE(ans.size() == 511);
 
         for (auto& p : ans) {
@@ -96,7 +98,6 @@ TEST_CASE("Ensure DFS works as intended") {
 
         std::vector<std::pair<unsigned int, unsigned int>> ans = g.getIdeaHistory(id_collection[ind]);
 
-        std::cout << "\n";
         if (!ans.empty()) {
             for (auto& p : ans) {
                 if (p.first <= 1) {
